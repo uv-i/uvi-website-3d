@@ -3,6 +3,34 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import LandmarkCube from './LandmarkCube';
 
+const FloatingParticle = ({ angle, index, isDark }) => {
+  const ref = useRef();
+  const initialY = -2.7 - index * 0.18;
+  const speed = 0.6 + index * 0.12;
+  const range = 0.28;
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const t = clock.getElapsedTime() * speed;
+    ref.current.position.y = initialY + Math.sin(t) * range;
+    ref.current.rotation.x = t * 0.25;
+    ref.current.rotation.y = t * 0.35;
+  });
+
+  return (
+    <mesh ref={ref} position={[Math.cos(angle) * 1.6, initialY, Math.sin(angle) * 1.6]}>
+      <boxGeometry args={[0.16, 0.16, 0.16]} />
+      <meshStandardMaterial
+        color={isDark ? '#a855f7' : '#5588cc'}
+        emissive={isDark ? '#8855FF' : '#4477bb'}
+        emissiveIntensity={isDark ? 0.8 : 0.3}
+        transparent
+        opacity={0.7}
+      />
+    </mesh>
+  );
+};
+
 const IslandBase = ({ isDark }) => (
   <group>
     <mesh position={[0, 0, 0]} receiveShadow castShadow>
@@ -63,18 +91,7 @@ const IslandBase = ({ isDark }) => (
     {/* Floating particles under island */}
     {Array.from({ length: 6 }).map((_, i) => {
       const angle = (i / 6) * Math.PI * 2;
-      return (
-        <mesh key={i} position={[Math.cos(angle) * 1.5, -2.7 - i * 0.15, Math.sin(angle) * 1.5]}>
-          <boxGeometry args={[0.18, 0.18, 0.18]} />
-          <meshStandardMaterial
-            color={isDark ? '#3311aa' : '#5588cc'}
-            emissive={isDark ? '#3311aa' : '#4477bb'}
-            emissiveIntensity={0.4}
-            transparent
-            opacity={0.6}
-          />
-        </mesh>
-      );
+      return <FloatingParticle key={i} angle={angle} index={i} isDark={isDark} />;
     })}
   </group>
 );
@@ -111,6 +128,28 @@ const LANDMARKS = [
   { label: 'Contact',   route: '/contact', color: '#FF4488', position: [ 0,  0.85, -2  ], floatOffset: 3.0 },
 ];
 
+const BeaconLight = ({ isDark }) => {
+  const ref = useRef();
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const t = clock.getElapsedTime() * 0.85;
+    // Orbit light around the island's center core
+    ref.current.position.x = Math.cos(t) * 3.5;
+    ref.current.position.z = Math.sin(t) * 3.5;
+  });
+
+  return (
+    <pointLight
+      ref={ref}
+      position={[0, 1.8, 0]}
+      intensity={isDark ? 2.8 : 1.4}
+      distance={8}
+      color={isDark ? '#ff7c08' : '#8855ff'}
+      castShadow
+    />
+  );
+};
+
 const SceneContents = ({ isDark }) => (
   <>
     <ambientLight intensity={isDark ? 0.4 : 0.7} />
@@ -123,6 +162,7 @@ const SceneContents = ({ isDark }) => (
     />
     <pointLight position={[-4, 3, -4]} intensity={isDark ? 0.6 : 0.3} color={isDark ? '#5500ee' : '#ffaa44'} />
     <pointLight position={[4, 2, 4]} intensity={0.4} color={isDark ? '#ff6600' : '#aaddff'} />
+    <BeaconLight isDark={isDark} />
 
     <fog attach="fog" args={[isDark ? '#08080f' : '#fff6ee', 12, 30]} />
 

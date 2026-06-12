@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { TEACHING_DATA, APP_CONFIG } from '../data/mockData';
 import SectionHeader from '../components/atoms/SectionHeader';
 import IdeaForge from '../components/molecules/IdeaForge';
+import TiltWrapper from '../components/atoms/TiltWrapper';
 
 // ── Tag ────────────────────────────────────────────────────────────────────────
 const Tag = ({ label, isDark }) => (
@@ -14,57 +15,59 @@ const Tag = ({ label, isDark }) => (
 
 // ── Repo card ──────────────────────────────────────────────────────────────────
 const RepoCard = ({ repo, isDark }) => (
-  <article className={`group relative flex flex-col border rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
-    isDark
-      ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]'
-      : 'bg-white border-purple-100 hover:border-[#5500CC]/40 hover:shadow-[0_0_16px_rgba(85,0,204,0.1)] shadow-sm'
-  }`}>
-    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#5500EE] via-fuchsia-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+  <TiltWrapper className="w-full h-full">
+    <article className={`group relative flex flex-col border rounded-xl overflow-hidden h-full ${
+      isDark
+        ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]'
+        : 'bg-white border-purple-100 hover:border-[#5500CC]/40 hover:shadow-[0_0_16px_rgba(85,0,204,0.1)] shadow-sm'
+    }`}>
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#5500EE] via-fuchsia-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-    <div className="p-6 flex-1 flex flex-col">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
-            <BookOpen size={18} className={isDark ? 'text-purple-400' : 'text-[#5500CC]'} />
-          </div>
-          <div>
-            <div className={`text-[10px] font-mono uppercase tracking-widest mb-0.5 ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
-              {repo.category}
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
+              <BookOpen size={18} className={isDark ? 'text-purple-400' : 'text-[#5500CC]'} />
             </div>
-            <h3 className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{repo.title}</h3>
+            <div>
+              <div className={`text-[10px] font-mono uppercase tracking-widest mb-0.5 ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
+                {repo.category}
+              </div>
+              <h3 className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{repo.title}</h3>
+            </div>
           </div>
+          <span className={`text-[9px] font-mono px-2 py-0.5 rounded border flex-shrink-0 ${
+            repo.status === 'Active'
+              ? isDark ? 'border-green-700 text-green-400 bg-green-900/20' : 'border-green-400 text-green-700 bg-green-50'
+              : isDark ? 'border-gray-700 text-gray-400' : 'border-gray-300 text-gray-500'
+          }`}>
+            {repo.status}
+          </span>
         </div>
-        <span className={`text-[9px] font-mono px-2 py-0.5 rounded border flex-shrink-0 ${
-          repo.status === 'Active'
-            ? isDark ? 'border-green-700 text-green-400 bg-green-900/20' : 'border-green-400 text-green-700 bg-green-50'
-            : isDark ? 'border-gray-700 text-gray-400' : 'border-gray-300 text-gray-500'
-        }`}>
-          {repo.status}
-        </span>
+
+        <p className={`text-sm leading-relaxed mb-4 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          {repo.description}
+        </p>
+
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          {repo.tags.map(t => <Tag key={t} label={t} isDark={isDark} />)}
+        </div>
+
+        <a
+          href={repo.githubUrl}
+          target="_blank"
+          rel="noreferrer"
+          className={`mt-auto flex items-center justify-center gap-2 text-sm font-bold py-2.5 px-4 rounded-lg border transition-all clip-path-polygon ${
+            isDark
+              ? 'border-purple-700 text-purple-300 hover:bg-purple-900/25 hover:border-purple-500'
+              : 'border-[#5500CC] text-[#5500CC] hover:bg-purple-50'
+          }`}
+        >
+          <Github size={16} /> View on GitHub <ExternalLink size={12} />
+        </a>
       </div>
-
-      <p className={`text-sm leading-relaxed mb-4 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        {repo.description}
-      </p>
-
-      <div className="flex flex-wrap gap-1.5 mb-5">
-        {repo.tags.map(t => <Tag key={t} label={t} isDark={isDark} />)}
-      </div>
-
-      <a
-        href={repo.githubUrl}
-        target="_blank"
-        rel="noreferrer"
-        className={`mt-auto flex items-center justify-center gap-2 text-sm font-bold py-2.5 px-4 rounded-lg border transition-all clip-path-polygon ${
-          isDark
-            ? 'border-purple-700 text-purple-300 hover:bg-purple-900/25 hover:border-purple-500'
-            : 'border-[#5500CC] text-[#5500CC] hover:bg-purple-50'
-        }`}
-      >
-        <Github size={16} /> View on GitHub <ExternalLink size={12} />
-      </a>
-    </div>
-  </article>
+    </article>
+  </TiltWrapper>
 );
 
 const PlaceholderCard = ({ isDark }) => (

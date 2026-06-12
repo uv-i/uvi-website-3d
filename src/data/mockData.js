@@ -39,7 +39,7 @@ export const PARTNER_PROJECTS = [
     year: '2023 → Now',
     tags: ['Unity', 'C#', 'Firebase', 'In-App Purchases', 'Android', 'iOS'],
     description:
-      '10 themes. 500+ question cards. Countless family game nights. Guess In 10 is Skillmatics\' flagship trivia experience — and UV Interactives keeps it live and loved, quietly handling everything behind the scenes so players always get the best version of the game.',
+      '10+ themes. 500+ question cards. Countless family game nights. Guess In 10 is Skillmatics\' flagship trivia experience — and UV Interactives keeps it live and loved, quietly handling everything behind the scenes so players always get the best version of the game.',
     highlights: [
       '50K+ downloads across Android & iOS',
       'Lean, fast app with content delivered on demand — no bloated updates',
@@ -94,7 +94,7 @@ UV Interactives is a game development studio specialising in Unity mobile games.
 - Contact (/contact): Studio contact form and enquiry details
 
 === PARTNER WORK ===
-Guess In 10 — maintained for Skillmatics. 50K+ downloads. Family trivia game, 10 themes, 500+ cards.
+Guess In 10 — maintained for Skillmatics. 50K+ downloads. Family trivia game, 10+ themes, 500+ cards.
 Skillmatics is the IP owner: https://www.skillmatics.in/collections/guess-in-10
 Android: https://play.google.com/store/apps/details?id=com.skillmatics.guessin10
 iOS: https://apps.apple.com/in/app/guess-in-10-by-skillmatics/id1532193910

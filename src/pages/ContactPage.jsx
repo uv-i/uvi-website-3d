@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Sparkles, MapPin, Mail, Phone, Linkedin, ExternalLink } from 'lucide-react';
+import { Send, Sparkles, MapPin, Mail, ExternalLink } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { AIService } from '../services/aiService';
 import { APP_CONFIG } from '../data/mockData';
@@ -79,7 +79,7 @@ const ContactPage = () => {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="text-5xl mb-4">🎮</div>
             <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Message Sent!</h3>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Thanks for reaching out. I'll get back to you soon.</p>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Thanks for reaching out. We'll get back to you soon.</p>
             <button onClick={() => setSubmitted(false)} className={`mt-6 text-sm font-medium ${isDark ? 'text-purple-400' : 'text-[#5500CC]'} hover:underline`}>Send another</button>
           </div>
         ) : (
@@ -89,7 +89,7 @@ const ContactPage = () => {
               <input name="email" value={form.email} onChange={handleChange} type="email" placeholder="Your Email" required className={inputBase(isDark)} />
             </div>
             <input name="subject" value={form.subject} onChange={handleChange} type="text" placeholder="Subject" required className={inputBase(isDark)} />
-            <textarea name="message" value={form.message} onChange={handleChange} rows="5" placeholder="Tell me about your project or opportunity..." required className={inputBase(isDark)} />
+            <textarea name="message" value={form.message} onChange={handleChange} rows="5" placeholder="Tell us about your project..." required className={inputBase(isDark)} />
 
             <div className="flex justify-between items-center pt-1">
               <button
@@ -117,9 +117,7 @@ const ContactPage = () => {
             <div className={`text-xs font-mono uppercase tracking-widest mb-4 ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>Contact Details</div>
             <div className="space-y-3">
               <InfoRow icon={Mail} label="Email" value={APP_CONFIG.contactEmail} href={`mailto:${APP_CONFIG.contactEmail}`} isDark={isDark} />
-              <InfoRow icon={Phone} label="Phone" value={APP_CONFIG.contactPhone} isDark={isDark} />
               <InfoRow icon={MapPin} label="Location" value={APP_CONFIG.contactLocation} isDark={isDark} />
-              <InfoRow icon={Linkedin} label="LinkedIn" value="bhuvaneshwaran-m" href={APP_CONFIG.socials.linkedin} isDark={isDark} />
             </div>
           </div>
 

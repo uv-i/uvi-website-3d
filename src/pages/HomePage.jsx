@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Gamepad2, ArrowRight, ExternalLink, Flame, Download, Trophy, Users, Sparkles, Play, Code2 } from 'lucide-react';
+import { Gamepad2, ArrowRight, ExternalLink, Flame, Download, Trophy, Sparkles, Play, Code2, Layers } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import Button from '../components/atoms/Button';
-import { UV_PROJECTS, CLIENT_COMPANIES } from '../data/mockData';
+import { PARTNER_PROJECTS } from '../data/mockData';
+import { getIsland3D, setIsland3D } from '../state/islandState';
+import GameDetailPanel from '../components/game/GameDetailPanel';
+
+// Lazy — Three.js only loads when 3D mode is activated
+const IslandView = lazy(() => import('../components/island/IslandView'));
 
 // Showreel placeholder — set SHOWREEL_YOUTUBE_ID to your YouTube video ID to go live
 const SHOWREEL_YOUTUBE_ID = null;
@@ -34,6 +40,14 @@ const VideoEmbed = ({ youtubeId, isDark }) => {
   );
 };
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
+  }),
+};
+
 const StatCard = ({ value, label, icon: Icon, isDark }) => (
   <div className={`flex flex-col items-center justify-center p-6 rounded-xl border text-center transition-all hover:-translate-y-1 ${isDark ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60' : 'bg-white border-purple-100 shadow-sm hover:border-[#5500CC]/40'}`}>
     <Icon size={24} className={`mb-3 ${isDark ? 'text-orange-400' : 'text-orange-500'}`} />
@@ -42,8 +56,11 @@ const StatCard = ({ value, label, icon: Icon, isDark }) => (
   </div>
 );
 
-const GameCard = ({ title, genre, description, link, tags, isDark }) => (
-  <div className={`group relative border rounded-xl p-6 transition-all duration-300 hover:-translate-y-1 ${isDark ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]' : 'bg-white border-purple-100 shadow-sm hover:border-[#5500CC]/40 hover:shadow-lg'}`}>
+const GameCard = ({ title, genre, description, link, partnerName, partnerUrl, isDark, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`group relative border rounded-xl p-6 transition-all duration-300 cursor-pointer hover:-translate-y-1 active:scale-[0.99] ${isDark ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]' : 'bg-white border-purple-100 shadow-sm hover:border-[#5500CC]/40 hover:shadow-lg'}`}
+  >
     <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#5500EE] via-fuchsia-400 to-orange-500 rounded-t opacity-0 group-hover:opacity-100 transition-opacity" />
     <div className="flex items-start justify-between mb-3">
       <div>
@@ -57,11 +74,18 @@ const GameCard = ({ title, genre, description, link, tags, isDark }) => (
       )}
     </div>
     <p className={`text-sm leading-relaxed mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{description}</p>
-    <div className="flex flex-wrap gap-2">
-      {tags.map(tag => (
-        <span key={tag} className={`text-[10px] font-mono px-2 py-1 rounded border ${isDark ? 'border-gray-700 text-gray-400 bg-gray-900/50' : 'border-gray-200 text-gray-500 bg-gray-50'}`}>{tag}</span>
-      ))}
-    </div>
+    {partnerName && partnerUrl && (
+      <a
+        href={partnerUrl}
+        target="_blank"
+        rel="noreferrer"
+        className={`inline-flex items-center gap-1.5 text-[11px] font-medium transition-colors ${
+          isDark ? 'text-gray-500 hover:text-orange-400' : 'text-gray-400 hover:text-[#5500CC]'
+        }`}
+      >
+        IP © {partnerName} <ExternalLink size={10} />
+      </a>
+    )}
   </div>
 );
 
@@ -79,11 +103,33 @@ const HomePage = () => {
   const { isDark } = useTheme();
   const navigate = useNavigate();
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [view3D, setView3D] = useState(() => getIsland3D());
+  const [selectedGameIndex, setSelectedGameIndex] = useState(null);
+
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Force 2D on mobile even if singleton says 3D
+      if (mobile && getIsland3D()) {
+        setIsland3D(false);
+        setView3D(false);
+      }
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  const activate3D = () => { setIsland3D(true);  setView3D(true);  };
+  const deactivate3D = () => { setIsland3D(false); setView3D(false); };
+
   const stats = [
-    { value: '250K+', label: 'Downloads Shipped', icon: Download },
-    { value: '10+',   label: 'Games Published',   icon: Trophy },
-    { value: '7+',    label: 'Years Experience',   icon: Flame },
-    { value: '2',     label: 'Major Studios',      icon: Users },
+    { value: '50K+', label: 'Downloads on Partner Titles', icon: Download },
+    { value: '1',    label: 'Active Client Partnership',   icon: Trophy },
+    { value: '7+',   label: 'Years in Game Dev',          icon: Sparkles },
+    { value: '4+',   label: 'Service Areas',              icon: Flame },
   ];
 
   const services = [
@@ -93,13 +139,13 @@ const HomePage = () => {
     { icon: ArrowRight,title: 'AR & Firebase',         desc: 'Augmented reality experiences and cloud-connected game backends using AR Foundation and Firebase.' },
   ];
 
-  // Featured: first 3 client projects + UV Originals
-  const featured = [
-    ...CLIENT_COMPANIES.flatMap(c => c.projects).slice(0, 2),
-    ...UV_PROJECTS.slice(0, 1),
-  ];
+  const featured = PARTNER_PROJECTS.slice(0, 3);
+
+  // 3D DISABLED — re-enable when real assets are ready
+  // if (view3D && !isMobile) { ... }
 
   return (
+    <>
     <div className="space-y-24">
 
       {/* ── HERO ── */}
@@ -135,13 +181,20 @@ const HomePage = () => {
             <Button onClick={() => navigate('/games')} icon={Gamepad2}>See Our Games</Button>
             <Button variant="secondary" onClick={() => navigate('/contact')} icon={ArrowRight}>Start a Project</Button>
           </div>
+
+          {/* 3D Island toggle — re-enable when real assets are ready */}
+          {/* {!isMobile && <ExploreIn3DButton onClick={activate3D} isDark={isDark} />} */}
         </div>
       </section>
 
       {/* ── STATS ── */}
       <section className="max-w-4xl mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map(s => <StatCard key={s.label} {...s} isDark={isDark} />)}
+          {stats.map((s, i) => (
+            <motion.div key={s.label} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }}>
+              <StatCard {...s} isDark={isDark} />
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -162,7 +215,11 @@ const HomePage = () => {
         <div className={`text-xs font-mono uppercase tracking-widest mb-2 ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>What We Do</div>
         <h2 className={`text-2xl sm:text-3xl font-black mb-8 ${isDark ? 'text-white' : 'text-gray-900'}`}>Our Services</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {services.map(s => <ServiceCard key={s.title} {...s} isDark={isDark} />)}
+          {services.map((s, i) => (
+            <motion.div key={s.title} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }}>
+              <ServiceCard {...s} isDark={isDark} />
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -170,19 +227,45 @@ const HomePage = () => {
       <section className="max-w-7xl mx-auto px-4 pb-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <div className={`text-xs font-mono uppercase tracking-widest mb-1 ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>Featured Work</div>
-            <h2 className={`text-2xl sm:text-3xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Games We've Built</h2>
+            <div className={`text-xs font-mono uppercase tracking-widest mb-1 ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>Proud Partners</div>
+            <h2 className={`text-2xl sm:text-3xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Games We Ship</h2>
           </div>
           <button onClick={() => navigate('/games')} className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-orange-400' : 'text-gray-500 hover:text-orange-600'}`}>
-            All games <ArrowRight size={16} />
+            Full catalog <ArrowRight size={16} />
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {featured.map(p => <GameCard key={p.id} {...p} isDark={isDark} />)}
+          {featured.map((p, i) => (
+            <motion.div key={p.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }}>
+              <GameCard
+                title={p.title}
+                genre={p.genre}
+                description={p.description}
+                link={p.androidLink}
+                partnerName={p.partnerName}
+                partnerUrl={p.partnerUrl}
+                isDark={isDark}
+                onClick={() => setSelectedGameIndex(i)}
+              />
+            </motion.div>
+          ))}
         </div>
       </section>
 
     </div>
+
+    {/* Detail panel — same as Games page */}
+    {selectedGameIndex !== null && (
+      <GameDetailPanel
+        game={PARTNER_PROJECTS[selectedGameIndex]}
+        games={PARTNER_PROJECTS}
+        gameIndex={selectedGameIndex}
+        onClose={() => setSelectedGameIndex(null)}
+        onNavigate={setSelectedGameIndex}
+        isDark={isDark}
+      />
+    )}
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import NavBar from './components/layout/NavBar';
 import Footer from './components/layout/Footer';
@@ -10,6 +11,31 @@ const DevLabPage  = lazy(() => import('./pages/DevLabPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const ChatBot     = lazy(() => import('./components/organisms/ChatBot'));
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Suspense fallback={<PageLoader />}>
+          <Routes location={location}>
+            <Route path="/"        element={<HomePage />} />
+            <Route path="/games"   element={<GamesPage />} />
+            <Route path="/lab"     element={<DevLabPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="*"        element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 const PageLoader = () => {
   const { isDark } = useTheme();
@@ -54,15 +80,7 @@ const MainLayout = () => {
 
         <NavBar />
         <main className="relative z-10">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/"        element={<HomePage />} />
-              <Route path="/games"   element={<GamesPage />} />
-              <Route path="/lab"     element={<DevLabPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="*"        element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
+          <AnimatedRoutes />
         </main>
         <Suspense fallback={null}><ChatBot /></Suspense>
         <Footer />

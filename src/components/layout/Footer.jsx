@@ -12,7 +12,6 @@ const Footer = () => {
     }`}>
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex flex-col items-center md:items-start gap-1">
-          {/* Mini logo mark */}
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 rounded flex items-center justify-center bg-[#5500EE] overflow-hidden">
               <img src="/uv-logo.png" alt="" className="w-full h-full object-cover"
@@ -25,21 +24,13 @@ const Footer = () => {
               <span className={isDark ? 'text-orange-400' : 'text-orange-600'}>INTERACTIVES</span>
             </span>
           </div>
-          <p className="text-xs font-mono">© {year} · {APP_CONFIG.founderShort} · Chennai, India</p>
+          <p className="text-xs font-mono">© {year} · UV Interactives · {APP_CONFIG.contactLocation}</p>
         </div>
 
         <div className="flex gap-5 text-sm">
-          <a href={APP_CONFIG.socials.linkedin} target="_blank" rel="noreferrer"
-            className={`transition-colors ${isDark ? 'hover:text-purple-400' : 'hover:text-[#5500CC]'}`}>
-            LinkedIn
-          </a>
           <a href={APP_CONFIG.socials.github} target="_blank" rel="noreferrer"
             className={`transition-colors ${isDark ? 'hover:text-purple-400' : 'hover:text-[#5500CC]'}`}>
             GitHub
-          </a>
-          <a href={APP_CONFIG.socials.portfolio} target="_blank" rel="noreferrer"
-            className={`transition-colors ${isDark ? 'hover:text-purple-400' : 'hover:text-[#5500CC]'}`}>
-            Old Portfolio
           </a>
           <a href={`mailto:${APP_CONFIG.contactEmail}`}
             className={`transition-colors ${isDark ? 'hover:text-orange-400' : 'hover:text-orange-600'}`}>

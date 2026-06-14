@@ -10,7 +10,7 @@ const STUDIO_STATS = [
 const StatsHUD = ({ isDark }) => (
   <div style={{
     position: 'absolute',
-    top: '20px',
+    top: '50px',
     right:'20px',
     zIndex: 20,
     pointerEvents: 'none',

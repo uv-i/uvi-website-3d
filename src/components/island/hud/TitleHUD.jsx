@@ -4,7 +4,7 @@
 const TitleHUD = ({ isDark }) => (
   <div style={{
     position: 'absolute',
-    top: '50px',
+    top: '72px',
     left:'20px',
     zIndex: 20,
     pointerEvents: 'none'

@@ -1,79 +1,64 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Minimize2, X, Send, ArrowRight } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { useIdle } from '../../hooks/useIdle';
 import { AIService } from '../../services/aiService';
 import { CHATBOT_PERSONA } from '../../data/mockData';
+import { extractPageLinks } from '../../utils/chatbotLinks';
+import useLeoFacts from '../../hooks/useLeoFacts';
 
-// How long each bubble fact stays visible before cycling to the next (ms)
-const CYCLE_MS = 90_000; // 90 seconds ≈ 1.5 min — change here to adjust
-
-// ── Page link detection ────────────────────────────────────────────────────────
-const PAGE_LINKS = [
-  { keywords: ['dev lab', '/lab', 'teaching repo', 'unity tutorial', 'unity repo', 'tutorial repo'], route: '/lab', label: 'Dev Lab' },
-  { keywords: ['uv originals', 'uv original', 'guess in 10', 'originals tab', 'our games', 'game library'], route: '/games', label: 'Our Games' },
-  { keywords: ['games page', 'games tab', 'client work', 'client tab', 'see all games', 'fortnite project', 'projects page'], route: '/games', label: 'Games' },
-  { keywords: ['contact page', 'contact form', 'start a project', 'work with us', 'get in touch', 'reach out', 'send a message'], route: '/contact', label: 'Contact Us' },
-];
-
-const extractPageLinks = (text) => {
-  const lower = text.toLowerCase();
-  const found = [];
-  for (const page of PAGE_LINKS) {
-    if (page.keywords.some(kw => lower.includes(kw))) {
-      if (!found.find(f => f.route === page.route)) found.push(page);
-    }
-  }
-  return found;
-};
-
-// ── Component ──────────────────────────────────────────────────────────────────
+/**
+ * ChatBot — Leo the Cub conversational assistant.
+ *
+ * Responsibilities:
+ *  - Orchestrates the engagement bubble (via useLeoFacts)
+ *  - Manages chat window open/close state
+ *  - Handles message send → AI reply flow
+ *
+ * Leaf concerns that were extracted:
+ *  - Page-link data + keyword matching → src/utils/chatbotLinks.js
+ *  - Fact cycling + idle trigger         → src/hooks/useLeoFacts.js
+ */
 const ChatBot = () => {
   const { isDark } = useTheme();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const isIdle = useIdle(4000);
+  const navigate   = useNavigate();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [factIndex, setFactIndex] = useState(0);
-  const cycleRef = useRef(null);
-
-  const [messages, setMessages] = useState(() => {
+  const [isOpen,    setIsOpen]    = useState(false);
+  const [messages,  setMessages]  = useState(() => {
     const intro = CHATBOT_PERSONA.intros[Math.floor(Math.random() * CHATBOT_PERSONA.intros.length)];
     return [{ role: 'assistant', text: intro }];
   });
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [input,     setInput]     = useState('');
+  const [isTyping,  setIsTyping]  = useState(false);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, isOpen]);
+  const {
+    showWelcome, setShowWelcome,
+    factIndex, activeFact,
+    cycleRef, CYCLE_MS,
+  } = useLeoFacts(isOpen);
 
-  // Show bubble after idle
+  // Scroll to latest message
   useEffect(() => {
-    const isHiddenPage = ['/games', '/lab'].includes(location.pathname);
-    if (!isIdle || isOpen || showWelcome || isHiddenPage) return;
-    setFactIndex(0);
-    setShowWelcome(true);
-  }, [isIdle, location.pathname, isOpen, showWelcome]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isOpen]);
 
-  // Cycle facts while bubble is visible
+  // Open Leo when the 3D orb is clicked on the island
   useEffect(() => {
-    if (!showWelcome) { clearInterval(cycleRef.current); return; }
-    cycleRef.current = setInterval(() => {
-      setFactIndex(i => (i + 1) % CHATBOT_PERSONA.facts.length);
-    }, CYCLE_MS);
-    return () => clearInterval(cycleRef.current);
-  }, [showWelcome]);
-
-  const activeFact = CHATBOT_PERSONA.facts[factIndex];
+    const handler = () => {
+      setIsOpen(true);
+      setShowWelcome(false);
+      clearInterval(cycleRef.current);
+    };
+    window.addEventListener('leo:open', handler);
+    return () => window.removeEventListener('leo:open', handler);
+  }, [cycleRef, setShowWelcome]);
 
   const handleBubbleClick = () => {
     clearInterval(cycleRef.current);
     if (activeFact?.route) {
       setShowWelcome(false);
-      navigate(activeFact.route);
+      navigate(activeFact.route, { state: activeFact.state ?? null });
     } else {
       setIsOpen(true);
       setShowWelcome(false);
@@ -97,58 +82,43 @@ const ChatBot = () => {
       {/* ── Engagement bubble ──────────────────────────────────────────────── */}
       {showWelcome && !isOpen && (
         <div
-          className="fixed bottom-24 right-6 z-50 animate-[bounce_3s_infinite] cursor-pointer"
+          className="fixed bottom-36 right-6 z-50 animate-[bounce_3s_infinite] cursor-pointer"
           onClick={handleBubbleClick}
         >
-          <div className={`relative backdrop-blur-xl border px-5 pt-4 pb-5 rounded-2xl rounded-br-none shadow-lg max-w-[240px] overflow-hidden transition-all ${
+          <div className={`relative backdrop-blur-xl border px-5 pt-4 pb-5 rounded-2xl rounded-br-none shadow-lg max-w-[240px] transition-all ${
             isDark ? 'bg-gray-900/95 border-yellow-500 text-white' : 'bg-white/95 border-yellow-500 text-gray-900'
           }`}>
-            {/* Header */}
             <p className="font-bold text-sm flex items-center gap-2 mb-2">
               <span className="text-xl">🦁</span> Leo says:
             </p>
-
-            {/* Fact text — key forces remount so text animates in on change */}
             <p key={`text-${factIndex}`} className="text-xs font-medium mb-2 animate-[fadeIn_0.4s_ease-out]">
               {activeFact?.text}
             </p>
-
-            {/* CTA arrow if navigable */}
             {activeFact?.route && (
               <p className={`text-[10px] font-bold flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
                 <ArrowRight size={10} /> {activeFact.routeLabel}
               </p>
             )}
-
-            {/* Dismiss button */}
             <button
               onClick={(e) => { e.stopPropagation(); clearInterval(cycleRef.current); setShowWelcome(false); }}
               className="absolute -top-2 -right-2 bg-gray-800 border border-gray-600 rounded-full p-1 text-gray-400 hover:text-white hover:bg-red-500"
             >
               <X size={12} />
             </button>
-
-            {/* Progress bar — key restarts animation on each new fact */}
-            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-yellow-900/30 rounded-b-2xl overflow-hidden">
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-yellow-900/30 rounded-b-2xl overflow-hidden" style={{ borderRadius: '0 0 1rem 1rem' }}>
               <div
                 key={`bar-${factIndex}`}
                 className="h-full bg-yellow-500 origin-left"
-                style={{
-                  animation: `leoBubbleShrink ${CYCLE_MS}ms linear forwards`,
-                }}
+                style={{ animation: `leoBubbleShrink ${CYCLE_MS}ms linear forwards` }}
               />
             </div>
           </div>
-
-          {/* Fact counter dots */}
           <div className="flex justify-center gap-1.5 mt-2">
             {CHATBOT_PERSONA.facts.map((_, i) => (
               <div
                 key={i}
                 className={`rounded-full transition-all duration-300 ${
-                  i === factIndex
-                    ? 'w-4 h-1.5 bg-yellow-500'
-                    : 'w-1.5 h-1.5 bg-yellow-500/30'
+                  i === factIndex ? 'w-4 h-1.5 bg-yellow-500' : 'w-1.5 h-1.5 bg-yellow-500/30'
                 }`}
               />
             ))}
@@ -159,7 +129,7 @@ const ChatBot = () => {
       {/* ── FAB ────────────────────────────────────────────────────────────── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.6)] transition-all duration-300 transform hover:scale-110 ${
+        className={`fixed bottom-20 right-6 z-50 p-4 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.6)] transition-all duration-300 transform hover:scale-110 ${
           isOpen ? 'bg-red-500 rotate-90 text-white' : 'bg-gradient-to-tr from-yellow-500 to-amber-600 text-white'
         }`}
       >
@@ -168,7 +138,7 @@ const ChatBot = () => {
 
       {/* ── Chat window ────────────────────────────────────────────────────── */}
       {isOpen && (
-        <div className={`fixed bottom-24 right-4 md:right-6 w-[90vw] md:w-96 h-[500px] backdrop-blur-xl border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-[fadeIn_0.3s_ease-out] ${
+        <div className={`fixed bottom-36 right-4 md:right-6 w-[90vw] md:w-96 h-[500px] backdrop-blur-xl border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-[fadeIn_0.3s_ease-out] ${
           isDark ? 'bg-gray-900/95 border-yellow-500/30' : 'bg-white/95 border-yellow-500/30'
         }`}>
           <div className="bg-gradient-to-r from-yellow-500 to-amber-600 p-4 flex items-center gap-3 shadow-md">
@@ -201,7 +171,7 @@ const ChatBot = () => {
                     {msg.links.map(link => (
                       <button
                         key={link.route}
-                        onClick={() => { setIsOpen(false); navigate(link.route); }}
+                        onClick={() => { setIsOpen(false); navigate(link.route, { state: link.state ?? null }); }}
                         className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all hover:-translate-y-0.5 ${
                           isDark
                             ? 'border-yellow-500/50 text-yellow-400 bg-yellow-900/15 hover:bg-yellow-900/30'

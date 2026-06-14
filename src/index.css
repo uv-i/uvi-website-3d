@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Global keyframe animations ────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);     }
+}
+
+/* Diagonal speed-streak lines used in the dark-mode hero background */
+@keyframes speedStreak {
+  0%   { transform: translateX(-100%) skewX(-15deg); opacity: 0;    }
+  50%  { opacity: 0.12; }
+  100% { transform: translateX(200%)  skewX(-15deg); opacity: 0;    }
+}
+
+/* Leo chatbot bubble progress bar shrinks from full width to nothing */
+@keyframes leoBubbleShrink {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* ── Utility classes ────────────────────────────────────────────────────────── */
+
+/* Chamfered corner clip used on buttons and CTAs */
+.clip-path-polygon {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+/* Reusable speed-streak element */
+.speed-streak {
+  animation: speedStreak 4s ease-in-out infinite;
+}

@@ -56,14 +56,6 @@ const MainLayout = () => {
     <Router>
       <div className={`min-h-screen font-sans transition-colors duration-500 relative ${isDark ? 'bg-[#08080f] text-gray-200' : 'bg-[#FFF6EE] text-gray-900'}`}>
         <ParticleField />
-        <style>{`
-          @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-          @keyframes speedStreak { 0%{transform:translateX(-100%) skewX(-15deg);opacity:0;} 50%{opacity:0.12;} 100%{transform:translateX(200%) skewX(-15deg);opacity:0;} }
-          @keyframes leoBubbleShrink { from{transform:scaleX(1);} to{transform:scaleX(0);} }
-          .clip-path-polygon { clip-path: polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); }
-          .speed-streak { animation: speedStreak 4s ease-in-out infinite; }
-        `}</style>
-
         <div className={`fixed inset-0 pointer-events-none z-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] ${isDark ? 'mix-blend-overlay' : 'mix-blend-multiply'}`} />
 
         {isDark ? (

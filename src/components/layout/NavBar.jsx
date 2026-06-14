@@ -1,74 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Gamepad2, Mail, Moon, Sun, MonitorSmartphone, Menu, X, FlaskConical } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { APP_CONFIG } from '../../data/mockData';
-
-// ── Hooks (pure DOM — zero React re-renders) ──────────────────────────────────
-
-/**
- * Magnetic hover: the element drifts toward the cursor while hovered,
- * and snaps back with a spring when the cursor leaves.
- * Also writes --gx / --gy CSS vars for child glow effects.
- */
-function useMagnetic(strength = 0.24) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const move = (e) => {
-      const r  = el.getBoundingClientRect();
-      const cx = e.clientX - r.left - r.width  / 2;
-      const cy = e.clientY - r.top  - r.height / 2;
-      el.style.transition = 'transform 80ms ease-out';
-      el.style.transform  = `translate(${cx * strength}px, ${cy * strength}px)`;
-      el.style.setProperty('--gx', `${((e.clientX - r.left) / r.width)  * 100}%`);
-      el.style.setProperty('--gy', `${((e.clientY - r.top)  / r.height) * 100}%`);
-    };
-    const leave = () => {
-      el.style.transition = 'transform 650ms cubic-bezier(0.25, 1, 0.5, 1)';
-      el.style.transform  = 'translate(0, 0)';
-    };
-    el.addEventListener('mousemove',  move,  { passive: true });
-    el.addEventListener('mouseleave', leave);
-    return () => {
-      el.removeEventListener('mousemove',  move);
-      el.removeEventListener('mouseleave', leave);
-    };
-  }, [strength]);
-  return ref;
-}
-
-/**
- * 3-D logo tilt: rotates the element toward the cursor using perspective,
- * with preserve-3d so child elements at different Z depths pop at different rates.
- */
-function useLogoTilt(maxDeg = 15) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.transformStyle = 'preserve-3d';
-    const move = (e) => {
-      const r  = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width  - 0.5;
-      const py = (e.clientY - r.top)  / r.height - 0.5;
-      el.style.transition = 'transform 80ms ease-out';
-      el.style.transform  = `perspective(480px) rotateX(${-py * maxDeg}deg) rotateY(${px * maxDeg}deg) scale(1.06)`;
-    };
-    const leave = () => {
-      el.style.transition = 'transform 650ms cubic-bezier(0.25, 1, 0.5, 1)';
-      el.style.transform  = 'perspective(480px) rotateX(0deg) rotateY(0deg) scale(1)';
-    };
-    el.addEventListener('mousemove',  move,  { passive: true });
-    el.addEventListener('mouseleave', leave);
-    return () => {
-      el.removeEventListener('mousemove',  move);
-      el.removeEventListener('mouseleave', leave);
-    };
-  }, [maxDeg]);
-  return ref;
-}
+import { useMagnetic } from '../../hooks/useMagnetic';
+import { useLogoTilt } from '../../hooks/useLogoTilt';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -198,7 +134,7 @@ const NavBar = () => {
     <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b transition-colors duration-300 ${
       isDark ? 'bg-[#08080f]/88 border-purple-900/25' : 'bg-[#FFF6EE]/90 border-orange-200/60'
     }`}>
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-full mx-auto px-4">
         <div className="flex items-center justify-between h-20">
 
           {/* ── Logo — 3D tilt with depth-separated layers ── */}

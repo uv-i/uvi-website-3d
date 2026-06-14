@@ -28,6 +28,9 @@
     <meta name="twitter:image" content="https://uvinteractives.com/og-image.png" />
 
     <meta name="theme-color" content="#5500EE" />
+
+    <!-- Preload the GLB so it arrives in parallel with the JS bundle -->
+    <link rel="preload" href="/models/viking_island.glb" as="fetch" crossorigin>
   </head>
   <body>
     <div id="root"></div>

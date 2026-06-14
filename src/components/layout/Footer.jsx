@@ -10,8 +10,9 @@ const Footer = () => {
     <footer className={`border-t py-10 px-4 transition-colors duration-300 ${
       isDark ? 'bg-[#08080f] border-purple-900/20 text-gray-500' : 'bg-orange-50 border-orange-200/60 text-gray-500'
     }`}>
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex flex-col items-center md:items-start gap-1">
+      {/* ── Tuning: swap `max-w-7xl` for `max-w-full` to reach screen edges on wide monitors */}
+      <div className="max-w-full mx-auto flex flex-row justify-between items-center gap-6">
+        <div className="flex flex-col items-start gap-1">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 rounded flex items-center justify-center bg-[#5500EE] overflow-hidden">
               <img src="/uv-logo.png" alt="" className="w-full h-full object-cover"

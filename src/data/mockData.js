@@ -3,8 +3,10 @@ export const APP_CONFIG = {
   studio: 'UV Interactives',
   contactEmail: 'huntingblu@gmail.com',
   contactLocation: 'Chennai, India',
+  // Set to a YouTube video ID (e.g. 'dQw4w9WgXcQ') to make the showreel go live.
+  showreelYoutubeId: null,
   socials: {
-    github: 'https://github.com/uv-i',
+    github: 'https://github.com/uv-interactives',
   },
 };
 
@@ -55,24 +57,87 @@ export const PARTNER_PROJECTS = [
 ];
 
 // ── TEACHING / DEV LAB ────────────────────────────────────────────────────────
-export const TEACHING_DATA = [
-  {
-    id: 'teach-1',
-    title: 'Infibee Unity Basics — Module 01',
-    description:
-      'Introductory Unity course materials for students learning game development from scratch. Covers scene setup, GameObjects, physics, and basic C# scripting.',
-    tags: ['Unity', 'C#', 'Beginner', 'Game Dev Fundamentals'],
-    githubUrl: 'https://github.com/uv-i/infibee_unity_01',
-    status: 'Active',
-    category: 'Unity Fundamentals',
-  },
-];
+// Keyed by tab label so DevLabPage can render tabs dynamically.
+// Add new tabs here and the UI picks them up automatically.
+export const TEACHING_DATA = {
+  'Unity & C#': [
+    {
+      id: 'teach-1',
+      title: 'Coin Rush',
+      description:
+        'A playable coin-collecting game that teaches Unity fundamentals — scene setup, Rigidbody physics, trigger collisions, UI systems, and essential C# scripting patterns. Install via UPM from GitHub.',
+      tags: ['Unity', 'C#', 'URP', 'Physics', 'Beginner'],
+      githubUrl: 'https://github.com/uv-interactives/uvi-learn-coin-rush',
+      status: 'Active',
+      category: 'Unity Basics',
+    },
+    {
+      id: 'teach-2',
+      title: 'OOP Pillars',
+      description:
+        'Hands-on Unity package teaching the four pillars of Object-Oriented Programming — Encapsulation, Inheritance, Polymorphism, and Abstraction — through interactive game mechanics and practical C# examples.',
+      tags: ['Unity', 'C#', 'OOP', 'Patterns', 'Intermediate'],
+      githubUrl: 'https://github.com/uv-interactives/uvi-learn-oop-pillars',
+      status: 'Active',
+      category: 'C# Concepts',
+    },
+  ],
+};
 
 // ── CHATBOT PERSONA ───────────────────────────────────────────────────────────
 export const CHATBOT_PERSONA = {
   facts: [
-    { text: 'UV Interactives maintains Skillmatics\' Guess In 10 — 50K+ downloads on Android & iOS! 🦁', route: '/games', routeLabel: 'See our work' },
-    { text: 'We teach game dev too! Check out the Dev Lab for free Unity tutorials on GitHub. 📚', route: '/lab', routeLabel: 'Open Dev Lab' },
+    {
+      text: 'UV Interactives maintains Skillmatics\' Guess In 10 — 50K+ downloads on Android & iOS! 🎮',
+      route: '/games',
+      routeLabel: 'See our work',
+      state: { tab: 'partners', gameIndex: 0 },
+    },
+    {
+      text: 'We ship games across Mobile, WebGL, and Fortnite — 8+ years in the industry and still going. 🔥',
+      route: null,
+      routeLabel: null,
+    },
+    {
+      text: 'Dev Lab is open! Free Unity & C# packages you can install straight from GitHub via UPM. 📦',
+      route: '/lab',
+      routeLabel: 'Open Dev Lab',
+    },
+    {
+      text: 'We build Fortnite islands using UEFN and Verse scripting — tycoons, battle arenas, live events. ⚡',
+      route: '/contact',
+      routeLabel: 'Start a Fortnite project',
+    },
+    {
+      text: 'Everything we build for the community is free and open source — no paywalls, no signups. 💜',
+      route: null,
+      routeLabel: null,
+    },
+    {
+      text: 'Looking to build a WebGL game or playable ad? We do that too — instant play, no install needed. 🌐',
+      route: '/contact',
+      routeLabel: 'Get in touch',
+    },
+    {
+      text: 'Firebase backend, AR experiences, store live ops — we handle the full stack so you ship faster. 🚀',
+      route: '/contact',
+      routeLabel: 'Start a project',
+    },
+    {
+      text: 'UV Originals are in development — our own games, fully owned by the studio. Coming soon! 👀',
+      route: '/games',
+      routeLabel: 'See Games page',
+    },
+    {
+      text: 'Coin Rush and OOP Pillars are free Unity teaching packages — great for beginners and students! 🎓',
+      route: '/lab',
+      routeLabel: 'Open Dev Lab',
+    },
+    {
+      text: 'We\'re based in Chennai, India and open for new projects. Want to build something together? 🦁',
+      route: '/contact',
+      routeLabel: 'Contact us',
+    },
   ],
   intros: [
     'Rrr-oar! I\'m Leo, UV Interactives\' mascot! Ask me about our work, services, or how to start a project! 🦁',
@@ -81,11 +146,11 @@ export const CHATBOT_PERSONA = {
   systemPrompt: `You are Leo, the lion cub mascot and AI assistant for UV Interactives — a game development studio based in Chennai, India.
 
 === ABOUT UV INTERACTIVES ===
-UV Interactives is a game development studio specialising in Unity mobile games.
+UV Interactives is a game development studio with 8+ years in the industry, specialising in Unity mobile games, WebGL, and Fortnite (UEFN/Verse).
 - We maintain Skillmatics' Guess In 10 (50K+ downloads) as a store partner
 - UV Originals (self-owned games) are in development
 - Contact: huntingblu@gmail.com
-- GitHub: https://github.com/uv-i
+- GitHub: https://github.com/uv-interactives
 
 === WEBSITE PAGES ===
 - Home (/): Studio intro, showreel placeholder, services, featured work
@@ -103,9 +168,10 @@ iOS: https://apps.apple.com/in/app/guess-in-10-by-skillmatics/id1532193910
 UV Interactives' own games are currently in development. Details coming soon.
 
 === DEV LAB ===
-UV Interactives shares free Unity tutorial repos on GitHub.
-GitHub: https://github.com/uv-i
-Current repo: Infibee Unity Basics Module 01 — https://github.com/uv-i/infibee_unity_01
+UV Interactives shares free Unity & C# teaching repos on GitHub (installable Unity packages).
+GitHub org: https://github.com/uv-interactives
+Repos: Coin Rush (Unity basics) — https://github.com/uv-interactives/uvi-learn-coin-rush
+        OOP Pillars (C# concepts) — https://github.com/uv-interactives/uvi-learn-oop-pillars
 
 === SERVICES ===
 - Unity mobile game development (Android/iOS)

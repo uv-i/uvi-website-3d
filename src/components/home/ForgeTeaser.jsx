@@ -1,10 +1,5 @@
 import { BookOpen } from 'lucide-react';
-
-const FORGE_POSTS = [
-  { slug: 'unity-upm-packages-101',    title: 'How we ship Unity tutorials as UPM packages',        tag: 'Dev process', mins: 5 },
-  { slug: 'fortnite-verse-scripting',  title: 'Getting started with Verse scripting in UEFN',       tag: 'Tutorial',    mins: 8 },
-  { slug: 'firebase-unity-mobile',     title: 'Firebase in Unity: analytics, auth & remote config', tag: 'Tutorial',    mins: 7 },
-];
+import { FORGE_POSTS } from '../../data/mockData';
 
 const ForgeTeaser = ({ isDark }) => (
   <section className="max-w-5xl mx-auto px-4 pb-20">

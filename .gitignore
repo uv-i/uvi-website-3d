@@ -1,3 +1,6 @@
+# Sanity seed token — contains a secret write key, never commit
+.env.seed
+
 # Logs
 logs
 *.log

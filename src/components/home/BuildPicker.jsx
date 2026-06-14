@@ -1,40 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Globe, Zap, ChevronRight, ArrowRight } from 'lucide-react';
-
-const BUILD_OPTIONS = [
-  {
-    id: 'mobile',
-    icon: Smartphone,
-    platform: 'Mobile Game',
-    tagline: 'Android & iOS',
-    color: '#FF8C00',
-    examples: ['Casual & hyper-casual', 'Trivia & quiz titles', 'AR experiences', 'Firebase live ops'],
-    cta: 'Start a mobile project',
-    route: '/contact',
-  },
-  {
-    id: 'web',
-    icon: Globe,
-    platform: 'WebGL / Browser',
-    tagline: 'No install, instant play',
-    color: '#8855FF',
-    examples: ['Playable ads', 'Browser mini-games', 'Interactive marketing', 'HTML5 games'],
-    cta: 'Explore WebGL work',
-    route: '/contact',
-  },
-  {
-    id: 'fortnite',
-    icon: Zap,
-    platform: 'Fortnite Island',
-    tagline: 'UEFN + Verse scripting',
-    color: '#22C55E',
-    examples: ['Tycoon & economy maps', 'Battle arenas', 'Live event systems', 'Custom game modes'],
-    cta: 'Build a Fortnite island',
-    route: '/contact',
-  },
-];
+import { ChevronRight, ArrowRight } from 'lucide-react';
+import { BUILD_OPTIONS } from '../../data/mockData';
 
 const BuildPicker = ({ isDark }) => {
   const navigate = useNavigate();

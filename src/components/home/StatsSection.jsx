@@ -1,14 +1,7 @@
 import { motion } from 'framer-motion';
-import { Download, Trophy, Sparkles, Flame } from 'lucide-react';
 import TiltWrapper from '../atoms/TiltWrapper';
 import { fadeUp } from './fadeUp';
-
-export const STATS = [
-  { value: '50K+', label: 'Downloads on Partner Titles', icon: Download },
-  { value: '1',    label: 'Active Client Partnership',   icon: Trophy   },
-  { value: '8+',   label: 'Years in Game Dev',           icon: Sparkles },
-  { value: '4+',   label: 'Service Areas',               icon: Flame    },
-];
+import { STATS } from '../../data/mockData';
 
 const StatCard = ({ value, label, icon: Icon, isDark }) => (
   <TiltWrapper className="w-full h-full">

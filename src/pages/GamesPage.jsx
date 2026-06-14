@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Star, ExternalLink, Handshake } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { UV_PROJECTS, PARTNER_PROJECTS } from '../data/mockData';
+import { useGamesData } from '../hooks/useSanityData';
 import GameDetailPanel from '../components/game/GameDetailPanel';
 import TiltWrapper from '../components/atoms/TiltWrapper';
 import StatusBadge from '../components/atoms/StatusBadge';
@@ -172,6 +172,9 @@ const GamesPage = () => {
   const [activeTab, setActiveTab] = useState('originals');
   const [selectedIndex, setSelectedIndex] = useState(null);
 
+  // Fetch live data from Sanity (falls back to mockData.js if CMS not configured)
+  const { uvProjects, partnerProjects, loading } = useGamesData();
+
   // If navigated here from chatbot (or any deep link) with state, apply it once on mount
   useEffect(() => {
     if (!navState) return;
@@ -179,10 +182,18 @@ const GamesPage = () => {
     if (navState.gameIndex != null) setSelectedIndex(navState.gameIndex);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const selectedGame = selectedIndex !== null ? PARTNER_PROJECTS[selectedIndex] : null;
+  const selectedGame = selectedIndex !== null ? partnerProjects[selectedIndex] : null;
 
   const openGame = (index) => setSelectedIndex(index);
   const closeGame = () => setSelectedIndex(null);
+
+  if (loading) return (
+    <div className="pt-24 pb-20 px-4 max-w-5xl mx-auto min-h-screen flex items-center justify-center">
+      <div className={`text-sm font-mono ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
+        Loading games…
+      </div>
+    </div>
+  );
 
   return (
     <div className="pt-24 pb-20 px-4 max-w-5xl mx-auto min-h-screen">
@@ -232,7 +243,7 @@ const GamesPage = () => {
             <div className={`absolute left-[26px] top-0 bottom-0 w-[2px] ${
               isDark ? 'bg-gradient-to-b from-amber-600 via-purple-800/40 to-transparent' : 'bg-gradient-to-b from-amber-400 via-purple-300/40 to-transparent'
             }`} />
-            {UV_PROJECTS.map((p, i) => p.teaser && (
+            {uvProjects.map((p, i) => p.teaser && (
               <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
                 <TeaserCard project={p} isDark={isDark} />
               </motion.div>
@@ -257,7 +268,7 @@ const GamesPage = () => {
               <div className={`absolute left-[26px] top-0 bottom-0 w-[2px] ${
                 isDark ? 'bg-gradient-to-b from-[#8855FF] via-purple-800/40 to-transparent' : 'bg-gradient-to-b from-[#5500CC] via-purple-300/40 to-transparent'
               }`} />
-              {PARTNER_PROJECTS.map((project, i) => (
+              {partnerProjects.map((project, i) => (
                 <motion.div key={project.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.09, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}>
                   <PartnerCard project={project} isDark={isDark} onClick={() => openGame(i)} />
                 </motion.div>
@@ -271,7 +282,7 @@ const GamesPage = () => {
       {selectedGame && (
         <GameDetailPanel
           game={selectedGame}
-          games={PARTNER_PROJECTS}
+          games={partnerProjects}
           gameIndex={selectedIndex}
           onClose={closeGame}
           onNavigate={setSelectedIndex}

@@ -1,3 +1,5 @@
+import { Download, Trophy, Sparkles, Flame, Gamepad2, Code2, ArrowRight, Smartphone, Globe, Zap } from 'lucide-react';
+
 // ── APP CONFIG ────────────────────────────────────────────────────────────────
 export const APP_CONFIG = {
   studio: 'UV Interactives',
@@ -188,3 +190,84 @@ You are Leo, a playful lion cub mascot for UV Interactives. Use occasional sound
 3. If someone wants to start a project, direct to the Contact page.
 4. Mention Dev Lab if someone asks about learning Unity or game dev.`,
 };
+
+// ── HOME PAGE — STATS ─────────────────────────────────────────────────────────
+// Shown in the StatsSection on the homepage and as the compact HUD on the 3D island.
+// To update a number or label, edit here — it changes in both places automatically.
+export const STATS = [
+  { value: '50K+', label: 'Downloads on Partner Titles', icon: Download },
+  { value: '1',    label: 'Active Client Partnership',   icon: Trophy   },
+  { value: '8+',   label: 'Years in Game Dev',           icon: Sparkles },
+  { value: '4+',   label: 'Service Areas',               icon: Flame    },
+];
+
+// Compact version shown in the 3D island HUD (no icons, shorter labels).
+// Derived from STATS — update STATS above and adjust labels here if needed.
+export const STUDIO_STATS = [
+  { value: '50K+', label: 'Downloads'  },
+  { value: '8+',   label: 'Yrs'        },
+  { value: '♥',    label: 'Open Source'},
+];
+
+// ── HOME PAGE — SERVICES ──────────────────────────────────────────────────────
+// Each card appears in the "Our Services" section.
+// Fields: icon (Lucide component), title (string), desc (string)
+export const SERVICES = [
+  { icon: Gamepad2,   title: 'Unity Development',    desc: 'Mobile games for Android & iOS — Firebase backend, store integration, live ops, and optimised builds.' },
+  { icon: Sparkles,   title: 'UEFN / Fortnite',      desc: 'Custom Fortnite islands built in Verse — tycoons, battle maps, economy systems, and live events.' },
+  { icon: Code2,      title: 'WebGL / Playable Ads', desc: 'Instant-play browser games and playable ad formats in Cocos Creator + TypeScript — no install required.' },
+  { icon: ArrowRight, title: 'AR & Firebase',        desc: 'Augmented reality experiences and cloud-connected game backends using AR Foundation and Firebase.' },
+];
+
+// ── HOME PAGE — BUILD PICKER ──────────────────────────────────────────────────
+// The interactive "Pick your platform" section.
+// Fields: id (string), icon (Lucide component), platform (string), tagline (string),
+//         color (hex), examples (string[]), cta (string), route (string)
+export const BUILD_OPTIONS = [
+  {
+    id: 'mobile',
+    icon: Smartphone,
+    platform: 'Mobile Game',
+    tagline: 'Android & iOS',
+    color: '#FF8C00',
+    examples: ['Casual & hyper-casual', 'Trivia & quiz titles', 'AR experiences', 'Firebase live ops'],
+    cta: 'Start a mobile project',
+    route: '/contact',
+  },
+  {
+    id: 'web',
+    icon: Globe,
+    platform: 'WebGL / Browser',
+    tagline: 'No install, instant play',
+    color: '#8855FF',
+    examples: ['Playable ads', 'Browser mini-games', 'Interactive marketing', 'HTML5 games'],
+    cta: 'Explore WebGL work',
+    route: '/contact',
+  },
+  {
+    id: 'fortnite',
+    icon: Zap,
+    platform: 'Fortnite Island',
+    tagline: 'UEFN + Verse scripting',
+    color: '#22C55E',
+    examples: ['Tycoon & economy maps', 'Battle arenas', 'Live event systems', 'Custom game modes'],
+    cta: 'Build a Fortnite island',
+    route: '/contact',
+  },
+];
+
+// ── HOME PAGE — PLATFORM TAGS ─────────────────────────────────────────────────
+// Shown as pill badges in the hero / PlatformStrip component.
+// Just add or remove strings to update the list.
+export const PLATFORMS = [
+  'Unity', 'UEFN · Verse', 'WebGL', 'Firebase', 'iOS', 'Android', 'AR Foundation',
+];
+
+// ── HOME PAGE — FORGE / BLOG TEASERS ─────────────────────────────────────────
+// Placeholder blog post cards shown in the "From the Forge" section.
+// Fields: slug (string), title (string), tag (string), mins (number — read time)
+export const FORGE_POSTS = [
+  { slug: 'unity-upm-packages-101',   title: 'How we ship Unity tutorials as UPM packages',        tag: 'Dev process', mins: 5 },
+  { slug: 'fortnite-verse-scripting', title: 'Getting started with Verse scripting in UEFN',       tag: 'Tutorial',    mins: 8 },
+  { slug: 'firebase-unity-mobile',    title: 'Firebase in Unity: analytics, auth & remote config', tag: 'Tutorial',    mins: 7 },
+];

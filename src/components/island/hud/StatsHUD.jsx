@@ -1,8 +1,4 @@
-const STUDIO_STATS = [
-  { value: '50K+', label: 'Downloads' },
-  { value: '8+',   label: 'Yrs'       },
-  { value: '♥',    label: 'Open Source'},
-];
+import { STUDIO_STATS } from '../../../data/mockData';
 
 /**
  * Bottom-left frosted pill showing studio headline stats.
@@ -10,7 +6,7 @@ const STUDIO_STATS = [
 const StatsHUD = ({ isDark }) => (
   <div style={{
     position: 'absolute',
-    top: '72px',
+    top: '96px',
     right:'20px',
     zIndex: 20,
     pointerEvents: 'none',

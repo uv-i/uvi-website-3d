@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Github, ExternalLink, BookOpen, FlaskConical, Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { TEACHING_DATA, APP_CONFIG } from '../data/mockData';
+import { APP_CONFIG } from '../data/mockData';
+import { useDevLabData } from '../hooks/useSanityData';
 import SectionHeader from '../components/atoms/SectionHeader';
 import IdeaForge from '../components/molecules/IdeaForge';
 import TiltWrapper from '../components/atoms/TiltWrapper';
@@ -85,9 +86,27 @@ const PlaceholderCard = ({ isDark }) => (
 // ── Page ───────────────────────────────────────────────────────────────────────
 const DevLabPage = () => {
   const { isDark } = useTheme();
-  const tabs = Object.keys(TEACHING_DATA);
+
+  // Fetch live data from Sanity (falls back to mockData.js if CMS not configured)
+  const { teachingData, loading } = useDevLabData();
+  const tabs = Object.keys(teachingData);
   const [activeTab, setActiveTab] = useState(tabs[0]);
-  const repos = TEACHING_DATA[activeTab] ?? [];
+  const repos = teachingData[activeTab] ?? [];
+
+  // If Sanity loads different categories than mockData, reset to the first available tab
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.includes(activeTab)) {
+      setActiveTab(tabs[0]);
+    }
+  }, [teachingData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) return (
+    <div className="pt-24 pb-20 px-4 max-w-6xl mx-auto min-h-screen flex items-center justify-center">
+      <div className={`text-sm font-mono ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
+        Loading packages…
+      </div>
+    </div>
+  );
 
   return (
     <div className="pt-24 pb-20 px-4 max-w-6xl mx-auto min-h-screen">

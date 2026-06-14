@@ -2,7 +2,8 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import GameDetailPanel from '../components/game/GameDetailPanel';
-import { PARTNER_PROJECTS, APP_CONFIG, TEACHING_DATA } from '../data/mockData';
+import { APP_CONFIG } from '../data/mockData';
+import { useGamesData, useDevLabData } from '../hooks/useSanityData';
 import { getIsland3D, setIsland3D, hasIsland3DPref } from '../state/islandState';
 import { hasWebGL } from '../utils/webgl';
 import { fadeUp } from '../components/home/fadeUp';
@@ -24,6 +25,10 @@ const IslandView = lazy(() => import('../components/island/IslandView'));
 
 const HomePage = () => {
   const { isDark } = useTheme();
+
+  // Live data from Sanity (silently falls back to mockData.js if CMS not configured)
+  const { partnerProjects } = useGamesData();
+  const { teachingData }    = useDevLabData();
 
   const [isMobile, setIsMobile]     = useState(false);
   const [view3D,   setView3D]       = useState(() => {
@@ -83,7 +88,7 @@ const HomePage = () => {
 
         <ServicesSection isDark={isDark} />
 
-        <PackagesSection packages={TEACHING_DATA['Unity & C#'] || []} isDark={isDark} />
+        <PackagesSection packages={teachingData['Unity & C#'] || []} isDark={isDark} />
 
         <section className="py-4">
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }}>
@@ -92,7 +97,7 @@ const HomePage = () => {
         </section>
 
         <GamesSection
-          games={PARTNER_PROJECTS.slice(0, 3)}
+          games={partnerProjects.slice(0, 3)}
           isDark={isDark}
           onGameClick={setSelectedGameIndex}
         />
@@ -105,8 +110,8 @@ const HomePage = () => {
 
       {selectedGameIndex !== null && (
         <GameDetailPanel
-          game={PARTNER_PROJECTS[selectedGameIndex]}
-          games={PARTNER_PROJECTS}
+          game={partnerProjects[selectedGameIndex]}
+          games={partnerProjects}
           gameIndex={selectedGameIndex}
           onClose={() => setSelectedGameIndex(null)}
           onNavigate={setSelectedGameIndex}

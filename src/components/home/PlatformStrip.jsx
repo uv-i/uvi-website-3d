@@ -1,4 +1,4 @@
-const PLATFORMS = ['Unity', 'UEFN · Verse', 'WebGL', 'Firebase', 'iOS', 'Android', 'AR Foundation'];
+import { PLATFORMS } from '../../data/mockData';
 
 const PlatformStrip = ({ isDark }) => (
   <div className="flex flex-wrap gap-2 justify-center items-center">

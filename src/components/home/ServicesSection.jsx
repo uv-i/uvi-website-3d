@@ -1,14 +1,7 @@
 import { motion } from 'framer-motion';
-import { Gamepad2, Sparkles, Code2, ArrowRight } from 'lucide-react';
 import TiltWrapper from '../atoms/TiltWrapper';
 import { fadeUp } from './fadeUp';
-
-export const SERVICES = [
-  { icon: Gamepad2,   title: 'Unity Development',    desc: 'Mobile games for Android & iOS — Firebase backend, store integration, live ops, and optimised builds.' },
-  { icon: Sparkles,   title: 'UEFN / Fortnite',      desc: 'Custom Fortnite islands built in Verse — tycoons, battle maps, economy systems, and live events.' },
-  { icon: Code2,      title: 'WebGL / Playable Ads', desc: 'Instant-play browser games and playable ad formats in Cocos Creator + TypeScript — no install required.' },
-  { icon: ArrowRight, title: 'AR & Firebase',        desc: 'Augmented reality experiences and cloud-connected game backends using AR Foundation and Firebase.' },
-];
+import { SERVICES } from '../../data/mockData';
 
 const ServiceCard = ({ icon: Icon, title, desc, isDark }) => (
   <TiltWrapper className="w-full h-full">

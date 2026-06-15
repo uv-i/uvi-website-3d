@@ -1,5 +1,5 @@
 export const AIService = {
-  apiKey: "", // Add your Gemini API key here — https://aistudio.google.com/app/apikey
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY || "",
 
   async generateContent(prompt, systemInstruction = "") {
     try {

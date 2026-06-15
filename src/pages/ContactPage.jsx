@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Send, Sparkles, MapPin, Mail, ExternalLink } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { AIService } from '../services/aiService';
@@ -39,9 +39,11 @@ const inputBase = (isDark) =>
 
 const ContactPage = () => {
   const { isDark } = useTheme();
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [form, setForm]         = useState({ name: '', email: '', subject: '', message: '' });
   const [isPolishing, setIsPolishing] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted]     = useState(false);
+  const [sending, setSending]         = useState(false);
+  const [sendError, setSendError]     = useState(false);
 
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -54,17 +56,42 @@ const ContactPage = () => {
     setIsPolishing(false);
   };
 
-  // Formspree submission
+  // EmailJS — submissions arrive as real emails in your inbox.
+  // 1. Sign up at emailjs.com (free — 200 emails/month)
+  // 2. Add Gmail as an Email Service → note the Service ID
+  // 3. Create an Email Template with variables {{name}} {{email}} {{subject}} {{message}}
+  // 4. Add these three values to Vercel env vars + local .env.local
+  const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || '';
+  const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+  const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || '';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    if (res.ok) {
+    setSending(true);
+    setSendError(false);
+    try {
+      const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id:  EMAILJS_SERVICE_ID,
+          template_id: EMAILJS_TEMPLATE_ID,
+          user_id:     EMAILJS_PUBLIC_KEY,
+          template_params: {
+            name:    form.name,
+            email:   form.email,
+            subject: form.subject,
+            message: form.message,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error('send failed');
       setSubmitted(true);
       setForm({ name: '', email: '', subject: '', message: '' });
+    } catch {
+      setSendError(true);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -91,6 +118,10 @@ const ContactPage = () => {
             <input name="subject" value={form.subject} onChange={handleChange} type="text" placeholder="Subject" required className={inputBase(isDark)} />
             <textarea name="message" value={form.message} onChange={handleChange} rows="5" placeholder="Tell us about your project..." required className={inputBase(isDark)} />
 
+            {sendError && (
+              <p className="text-xs text-red-400">Something went wrong — please email us directly.</p>
+            )}
+
             <div className="flex justify-between items-center pt-1">
               <button
                 type="button"
@@ -100,14 +131,11 @@ const ContactPage = () => {
               >
                 {isPolishing ? 'Polishing...' : <><Sparkles size={12} /> AI Polish</>}
               </button>
-              <Button type="submit" icon={Send}>Send Message</Button>
+              <Button type="submit" icon={Send} disabled={sending}>
+                {sending ? 'Sending…' : 'Send Message'}
+              </Button>
             </div>
 
-            <p className={`text-[10px] font-mono ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-              ⚠️ To activate the form: create a free account at{' '}
-              <a href="https://formspree.io" target="_blank" rel="noreferrer" className={isDark ? 'text-purple-400 hover:underline' : 'text-[#5500CC] hover:underline'}>formspree.io</a>
-              {' '}and replace <code>YOUR_FORM_ID</code> in ContactPage.jsx.
-            </p>
           </form>
         )}
 

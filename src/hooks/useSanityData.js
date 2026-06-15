@@ -1,88 +1,117 @@
 // ── Sanity Data Hooks ─────────────────────────────────────────────────────────
-// These hooks fetch live content from Sanity CMS.
-//
 // HOW IT WORKS:
-//   - If VITE_SANITY_PROJECT_ID is set → fetch from Sanity on page load
-//   - If the env var is missing (local dev without CMS) → use mockData.js instantly
-//   - If the Sanity fetch fails for any reason → fall back to mockData.js silently
+//   1. localStorage cache — if fresh (< 1 hr), use it instantly, no network call
+//   2. Module-level in-memory store — all hook instances across pages share the
+//      same in-flight fetch promise. HomePage starts the fetch; by the time the
+//      user navigates to Games or Dev Lab, the result is already in memory.
+//   3. If fetch fails for any reason → silently stay on mockData / stale cache
 //
-// This means the site NEVER breaks, even if Sanity is misconfigured.
+// Result: users never wait. The Sanity cold-start happens once in the background
+// on first home page load, invisible to the user.
 
 import { useState, useEffect } from 'react';
 import { sanityClient, isSanityConfigured } from '../lib/sanityClient';
 import { GAMES_QUERY, DEVLAB_QUERY }         from '../lib/sanityQueries';
 import { UV_PROJECTS, PARTNER_PROJECTS, TEACHING_DATA } from '../data/mockData';
 
-// ── useGamesData ──────────────────────────────────────────────────────────────
-// Returns UV Originals and Partner Projects, either from Sanity or mockData.js.
-//
-// Usage in a component:
-//   const { uvProjects, partnerProjects, loading } = useGamesData();
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
+// ── localStorage helpers ──────────────────────────────────────────────────────
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL) return null;
+    return data;
+  } catch { return null; }
+}
+
+function writeCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
+// ── Module-level shared state ─────────────────────────────────────────────────
+// These live outside React — shared across every hook instance on every page.
+// Once HomePage kicks off the fetch, navigating to Games reuses the same promise.
+const mem   = {};   // resolved data (in-memory, current session)
+const inflight = {}; // in-flight promises (prevents duplicate fetches)
+
+function fetchOnce(key, fetchFn) {
+  if (mem[key])      return Promise.resolve(mem[key]);
+  if (inflight[key]) return inflight[key];
+
+  inflight[key] = fetchFn()
+    .then(data => { mem[key] = data; writeCache(key, data); return data; })
+    .catch(err  => { console.warn(`[Sanity] ${key} fetch failed:`, err.message); return null; })
+    .finally(() => { delete inflight[key]; });
+
+  return inflight[key];
+}
+
+// ── useGamesData ──────────────────────────────────────────────────────────────
 export function useGamesData() {
-  const [uvProjects,      setUvProjects]      = useState(UV_PROJECTS);
-  const [partnerProjects, setPartnerProjects] = useState(PARTNER_PROJECTS);
-  const [loading,         setLoading]         = useState(isSanityConfigured);
+  const lsCache = isSanityConfigured ? readCache('uvi_sanity_games') : null;
+  const initial = mem['uvi_sanity_games'] ?? lsCache;
+
+  const [uvProjects,      setUvProjects]      = useState(initial?.uvProjects      ?? UV_PROJECTS);
+  const [partnerProjects, setPartnerProjects] = useState(initial?.partnerProjects ?? PARTNER_PROJECTS);
+  const [loading,         setLoading]         = useState(false);
   const [error,           setError]           = useState(null);
 
   useEffect(() => {
-    // Skip fetch if Sanity isn't configured — use mockData.js as-is
-    if (!isSanityConfigured) return;
+    if (!isSanityConfigured || initial) return; // cache hit — nothing to do
 
-    sanityClient
-      .fetch(GAMES_QUERY)
-      .then(games => {
-        const originals = games.filter(g => g.gameType === 'original');
-        const partners  = games.filter(g => g.gameType === 'partner');
-        // Only override if Sanity actually returned data (prevents empty-state flash)
-        if (originals.length > 0) setUvProjects(originals);
-        if (partners.length  > 0) setPartnerProjects(partners);
+    setLoading(true);
+    fetchOnce('uvi_sanity_games', () =>
+      sanityClient.fetch(GAMES_QUERY).then(games => {
+        const uvProjects      = games.filter(g => g.gameType === 'original');
+        const partnerProjects = games.filter(g => g.gameType === 'partner');
+        return {
+          uvProjects:      uvProjects.length      > 0 ? uvProjects      : UV_PROJECTS,
+          partnerProjects: partnerProjects.length > 0 ? partnerProjects : PARTNER_PROJECTS,
+        };
       })
-      .catch(err => {
-        console.warn('[Sanity] Games fetch failed — showing local data instead:', err.message);
-        setError(err.message);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    ).then(data => {
+      if (!data) { setError('fetch failed'); return; }
+      setUvProjects(data.uvProjects);
+      setPartnerProjects(data.partnerProjects);
+    }).finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { uvProjects, partnerProjects, loading, error };
 }
 
 // ── useDevLabData ─────────────────────────────────────────────────────────────
-// Returns TEACHING_DATA shape (object keyed by category/tab name), either from
-// Sanity or mockData.js.
-//
-// Usage in a component:
-//   const { teachingData, loading } = useDevLabData();
-//   const tabs = Object.keys(teachingData);
-
 export function useDevLabData() {
-  const [teachingData, setTeachingData] = useState(TEACHING_DATA);
-  const [loading,      setLoading]      = useState(isSanityConfigured);
+  const lsCache = isSanityConfigured ? readCache('uvi_sanity_devlab') : null;
+  const initial = mem['uvi_sanity_devlab'] ?? lsCache;
+
+  const [teachingData, setTeachingData] = useState(initial ?? TEACHING_DATA);
+  const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
 
   useEffect(() => {
-    if (!isSanityConfigured) return;
+    if (!isSanityConfigured || initial) return;
 
-    sanityClient
-      .fetch(DEVLAB_QUERY)
-      .then(packages => {
-        if (packages.length === 0) return; // Don't replace mockData with an empty set
-        // Group the flat array by category to match the TEACHING_DATA shape
-        const grouped = packages.reduce((acc, pkg) => {
+    setLoading(true);
+    fetchOnce('uvi_sanity_devlab', () =>
+      sanityClient.fetch(DEVLAB_QUERY).then(packages => {
+        if (packages.length === 0) return TEACHING_DATA;
+        return packages.reduce((acc, pkg) => {
           const cat = pkg.category || 'General';
           if (!acc[cat]) acc[cat] = [];
           acc[cat].push(pkg);
           return acc;
         }, {});
-        setTeachingData(grouped);
       })
-      .catch(err => {
-        console.warn('[Sanity] Dev Lab fetch failed — showing local data instead:', err.message);
-        setError(err.message);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    ).then(data => {
+      if (!data) { setError('fetch failed'); return; }
+      setTeachingData(data);
+    }).finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { teachingData, loading, error };
 }

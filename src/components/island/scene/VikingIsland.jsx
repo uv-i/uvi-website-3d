@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -46,7 +46,6 @@ const FireLayer = ({ position, count, color, size, maxHeight, riseSpeed }) => {
         attr.array[i * 3]     += meta[i * 4 + 2];
         attr.array[i * 3 + 2] += meta[i * 4 + 3];
         attr.array[i * 3 + 1]  = position[1] + life * maxHeight;
-        // Converge toward centre as it rises (flame tip)
         attr.array[i * 3]     = attr.array[i * 3]     * (1 - life * 0.04) + position[0] * life * 0.04;
         attr.array[i * 3 + 2] = attr.array[i * 3 + 2] * (1 - life * 0.04) + position[2] * life * 0.04;
       }
@@ -79,7 +78,6 @@ const ForgeLight = ({ position }) => {
   useFrame(({ clock }) => {
     if (!ref.current) return;
     const t = clock.getElapsedTime();
-    // Irregular flicker: sum of fast + slow sines
     ref.current.intensity =
       1.4 + Math.sin(t * 7.3) * 0.5 + Math.sin(t * 11.7) * 0.25 + Math.sin(t * 3.1) * 0.15;
   });
@@ -96,7 +94,7 @@ const ForgeLight = ({ position }) => {
   );
 };
 
-// ─── Full fire effect (3 particle bands + flickering light) ──────────────────
+// ─── Full fire effect ─────────────────────────────────────────────────────────
 const FORGE_POS = [-6.4, 0.7, -4.8];
 
 const FireEffect = () => (
@@ -110,8 +108,8 @@ const FireEffect = () => (
 
 // ─── Fireflies ────────────────────────────────────────────────────────────────
 const FIREFLY_ZONES = [
-  { cx: -6.5, cy: 1.5, cz: -4.5, r: 6, n: 18 }, // house / forge
-  { cx: 16,   cy: 1.0, cz: -6,   r: 5, n: 10 }, // lake
+  { cx: -6.5, cy: 1.5, cz: -4.5, r: 6, n: 18 },
+  { cx: 16,   cy: 1.0, cz: -6,   r: 5, n: 10 },
 ];
 const FIREFLY_COUNT = FIREFLY_ZONES.reduce((s, z) => s + z.n, 0);
 
@@ -151,7 +149,6 @@ const Fireflies = () => {
       attr.array[i * 3 + 2] = pos[i * 3 + 2] + Math.sin(t * s + p + 1.2) * 0.55;
     }
     attr.needsUpdate = true;
-    // Two out-of-phase sines so fireflies don't all sync: opacity 0.45 → 1.0
     if (matRef.current) {
       matRef.current.opacity = 0.55 + Math.sin(t * 3.2) * 0.28 + Math.sin(t * 7.1) * 0.12;
     }
@@ -176,10 +173,30 @@ const Fireflies = () => {
   );
 };
 
-// ─── Viking island GLB + floating bob ────────────────────────────────────────
+// ─── Single layer — loads one GLB and rises in from below when ready ──────────
+// Each layer mounts inside its own <Suspense> so it appears independently.
+const IslandLayer = ({ path }) => {
+  const { scene } = useGLTF(path);
+  const ref     = useRef();
+  const elapsed = useRef(0);
+  const done    = useRef(false);
+
+  useFrame((_, delta) => {
+    if (!ref.current || done.current) return;
+    elapsed.current += delta;
+    const t      = Math.min(elapsed.current / 1.4, 1);
+    // Ease-out expo: fast start, soft landing
+    const eased  = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    ref.current.position.y = -8 * (1 - eased);
+    if (t >= 1) done.current = true;
+  });
+
+  return <group ref={ref}><primitive object={scene} /></group>;
+};
+
+// ─── Island root — bob animation wraps all layers ─────────────────────────────
 const VikingIsland = ({ isDark }) => {
   const groupRef = useRef();
-  const { scene } = useGLTF('/models/viking_island.glb');
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -190,7 +207,32 @@ const VikingIsland = ({ isDark }) => {
 
   return (
     <group ref={groupRef}>
-      <primitive object={scene} />
+      {/* Layer 1 — Terrain: Island base, lake, mountains, floating rocks */}
+      <Suspense fallback={null}>
+        <IslandLayer path="/models/island_terrain.glb" />
+      </Suspense>
+
+      {/* Layer 2 — Vegetation: All trees and forest */}
+      <Suspense fallback={null}>
+        <IslandLayer path="/models/island_vegetation.glb" />
+      </Suspense>
+
+      {/* Layer 3 — Buildings + Fence: House, fence posts, path */}
+      <Suspense fallback={null}>
+        <IslandLayer path="/models/island_buildings.glb" />
+      </Suspense>
+
+      {/* Layer 4 — Activity: Dock, anvil, hammer, rocks, map board */}
+      <Suspense fallback={null}>
+        <IslandLayer path="/models/island_activity.glb" />
+      </Suspense>
+
+      {/* Layer 5 — Props: Table, bench, scrolls */}
+      <Suspense fallback={null}>
+        <IslandLayer path="/models/island_props.glb" />
+      </Suspense>
+
+      {/* Landmarks, effects — always visible once island root mounts */}
       {LANDMARKS.map((lm) => (
         <Landmark key={lm.id} lm={lm} isDark={isDark} />
       ))}

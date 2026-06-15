@@ -12,7 +12,12 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import SceneContent from './scene/SceneContent';
 
-useGLTF.preload('/models/viking_island.glb');
+// Preload all 5 layers so they start fetching as soon as 3D mode activates
+useGLTF.preload('/models/island_terrain.glb');
+useGLTF.preload('/models/island_vegetation.glb');
+useGLTF.preload('/models/island_buildings.glb');
+useGLTF.preload('/models/island_activity.glb');
+useGLTF.preload('/models/island_props.glb');
 
 const IslandScene = ({ isDark }) => (
   <Canvas

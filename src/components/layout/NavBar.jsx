@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { Gamepad2, Mail, Moon, Sun, MonitorSmartphone, Menu, X, FlaskConical } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { APP_CONFIG } from '../../data/mockData';
 import { useMagnetic } from '../../hooks/useMagnetic';
 import { useLogoTilt } from '../../hooks/useLogoTilt';
 
@@ -85,13 +84,16 @@ const ThemeButton = ({ isDark, toggleTheme, themeIcon, themeMode }) => {
   );
 };
 
-/** "Work With Us" CTA — magnetic + shimmer sweep + lift */
-const CTALink = ({ email, isDark }) => {
-  const ref = useMagnetic(0.16);
+/** "Work With Us" CTA — navigates to /contact, hidden when already there */
+const CTALink = ({ isDark }) => {
+  const ref      = useMagnetic(0.16);
+  const location = useLocation();
+  if (location.pathname === '/contact') return null;
+
   return (
     <div ref={ref} className="inline-flex ml-3">
-      <a
-        href={`mailto:${email}`}
+      <Link
+        to="/contact"
         className={`relative px-4 py-2 text-white text-xs font-bold uppercase tracking-wider
           clip-path-polygon overflow-hidden group/cta
           transition-all duration-300
@@ -100,12 +102,10 @@ const CTALink = ({ email, isDark }) => {
             : 'bg-[#5500CC] hover:bg-[#6611DD] hover:shadow-[0_6px_24px_rgba(85,0,204,0.45)]'
           }`}
       >
-        {/* Shimmer sweep — slides left-to-right on hover */}
         <span className="absolute inset-0 -translate-x-full group-hover/cta:translate-x-[200%] bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 ease-in-out skew-x-12 pointer-events-none" />
-        {/* Top edge gleam */}
         <span className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover/cta:opacity-100 transition-opacity duration-300" />
         <span className="relative">Work With Us</span>
-      </a>
+      </Link>
     </div>
   );
 };
@@ -115,7 +115,8 @@ const CTALink = ({ email, isDark }) => {
 const NavBar = () => {
   const { isDark, toggleTheme, themeMode } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const logoRef = useLogoTilt(15);
+  const location = useLocation();
+  const logoRef  = useLogoTilt(15);
 
   const navItems = [
     { path: '/',        label: 'Home',    icon: Gamepad2 },
@@ -192,7 +193,7 @@ const NavBar = () => {
               themeIcon={getThemeIcon()}
               themeMode={themeMode}
             />
-            <CTALink email={APP_CONFIG.contactEmail} isDark={isDark} />
+            <CTALink isDark={isDark} />
           </div>
 
           {/* ── Mobile controls ── */}
@@ -231,14 +232,17 @@ const NavBar = () => {
                 <div className="flex items-center gap-3"><item.icon size={18} />{item.label}</div>
               </NavLink>
             ))}
-            <a
-              href={`mailto:${APP_CONFIG.contactEmail}`}
-              className={`flex items-center justify-center gap-2 w-full mt-2 px-4 py-3 text-white text-sm font-bold uppercase tracking-wider clip-path-polygon ${
-                isDark ? 'bg-[#5500EE]' : 'bg-[#5500CC]'
-              }`}
-            >
-              Work With Us
-            </a>
+            {location.pathname !== '/contact' && (
+              <Link
+                to="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-center gap-2 w-full mt-2 px-4 py-3 text-white text-sm font-bold uppercase tracking-wider clip-path-polygon ${
+                  isDark ? 'bg-[#5500EE]' : 'bg-[#5500CC]'
+                }`}
+              >
+                Work With Us
+              </Link>
+            )}
           </div>
         </div>
       )}

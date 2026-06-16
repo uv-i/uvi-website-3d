@@ -82,10 +82,10 @@ const PartnerCard = ({ project, isDark, onClick }) => (
     <TiltWrapper className="w-full">
       <article
         onClick={onClick}
-        className={`group relative border rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer ${
+        className={`group relative border rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer backdrop-blur-md ${
           isDark
-            ? 'bg-[#0d0b18] border-purple-900/40 hover:border-[#8855FF]/60 hover:shadow-[0_0_32px_rgba(136,85,255,0.18)]'
-            : 'bg-white border-purple-100 hover:border-[#5500CC]/40 hover:shadow-[0_0_20px_rgba(85,0,204,0.12)] shadow-sm'
+            ? 'bg-purple-950/40 border-purple-500/20 hover:bg-purple-950/55 hover:border-[#8855FF]/60 hover:shadow-[0_0_32px_rgba(136,85,255,0.18)]'
+            : 'bg-white/70 border-purple-200/60 hover:bg-white/85 hover:border-[#5500CC]/40 hover:shadow-[0_0_20px_rgba(85,0,204,0.12)] shadow-sm'
         }`}
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#5500EE] via-orange-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10" />
@@ -190,7 +190,7 @@ const GamesPage = () => {
   if (loading) return (
     <div className="pt-24 pb-20 px-4 max-w-5xl mx-auto min-h-screen flex items-center justify-center">
       <div className={`text-sm font-mono ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
-        Loading games…
+        Rolling for initiative…
       </div>
     </div>
   );

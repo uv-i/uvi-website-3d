@@ -4,7 +4,7 @@ export const AIService = {
   async generateContent(prompt, systemInstruction = "") {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${this.apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -14,7 +14,10 @@ export const AIService = {
           }),
         }
       );
-      if (!response.ok) throw new Error('API call failed');
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(`API ${response.status}: ${errBody?.error?.message || response.statusText}`);
+      }
       const data = await response.json();
       return data.candidates?.[0]?.content?.parts?.[0]?.text || "Leo is offline right now. Please reach out via the Contact page!";
     } catch (error) {

@@ -44,7 +44,7 @@ const PageLoader = () => {
     <div className={`min-h-screen flex items-center justify-center ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-mono uppercase tracking-widest opacity-60">Loading…</span>
+        <span className="text-xs font-mono uppercase tracking-widest opacity-60">Booting the studio…</span>
       </div>
     </div>
   );

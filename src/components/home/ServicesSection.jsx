@@ -5,10 +5,10 @@ import { SERVICES } from '../../data/mockData';
 
 const ServiceCard = ({ icon: Icon, title, desc, isDark }) => (
   <TiltWrapper className="w-full h-full">
-    <div className={`p-6 rounded-xl border transition-all h-full ${
+    <div className={`p-6 rounded-xl border transition-all h-full backdrop-blur-md ${
       isDark
-        ? 'bg-[#0d0b18] border-purple-900/40 hover:border-orange-500/40'
-        : 'bg-white border-purple-100 shadow-sm hover:border-orange-300'
+        ? 'bg-purple-950/40 border-purple-500/20 hover:bg-purple-950/55 hover:border-orange-500/40'
+        : 'bg-white/70 border-purple-200/60 shadow-sm hover:bg-white/85 hover:border-orange-300'
     }`}>
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${isDark ? 'bg-orange-900/20' : 'bg-orange-50'}`}>
         <Icon size={20} className={isDark ? 'text-orange-400' : 'text-orange-500'} />

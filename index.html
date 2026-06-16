@@ -29,8 +29,7 @@
 
     <meta name="theme-color" content="#5500EE" />
 
-    <!-- Preload the GLB so it arrives in parallel with the JS bundle -->
-    <link rel="preload" href="/models/viking_island.glb" as="fetch" crossorigin>
+    <!-- 5-layer island GLBs — preloaded in IslandScene.jsx via useGLTF.preload() -->
   </head>
   <body>
     <div id="root"></div>

@@ -1,19 +1,56 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 
-/**
- * Interactive landmark — invisible collision box + HTML placard.
- *
- * Hover shared between 3D hit mesh and HTML card.
- * On hover: desc line + tag chips slide in above the "▶ ENTER" bar.
- */
+// ── Sonar-pulse ShaderMaterial ────────────────────────────────────────────────
+// Renders expanding concentric rings on the ground — like a radar/sonar ping.
+// Two rings offset by 0.5 in phase give a continuous pulse rather than a flash.
+const sonarVert = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const sonarFrag = /* glsl */ `
+  uniform float uTime;
+  uniform vec3  uColor;
+  uniform float uAlpha;   // master opacity (0 = hidden, 1 = fully visible)
+  varying vec2  vUv;
+
+  void main() {
+    vec2  uv   = vUv * 2.0 - 1.0;
+    float dist = length(uv);
+
+    // Discard outside the circle to keep the disc perfectly round
+    if (dist > 1.0) discard;
+
+    // Two rings travelling outward at different phases
+    float speed   = 0.55;
+    float ring1   = fract(dist - uTime * speed);
+    float ring2   = fract(dist - uTime * speed + 0.5);
+
+    // Thin bright edge at the ring front, fade behind
+    float r1Alpha = smoothstep(0.88, 1.0, ring1) * (1.0 - dist * dist);
+    float r2Alpha = smoothstep(0.88, 1.0, ring2) * (1.0 - dist * dist) * 0.55;
+
+    // Soft filled centre glow
+    float centre  = pow(max(0.0, 1.0 - dist * 1.4), 3.0) * 0.18;
+
+    float alpha   = (r1Alpha + r2Alpha + centre) * uAlpha;
+    gl_FragColor  = vec4(uColor, alpha);
+  }
+`;
+
+// ── Component ─────────────────────────────────────────────────────────────────
 const Landmark = ({ lm, isDark }) => {
   const [hovered, setHovered] = useState(false);
-  const navigate = useNavigate();
-  const glowRef  = useRef();
+  const navigate  = useNavigate();
+  const discRef   = useRef();
+  const alphaRef  = useRef(0); // smooth lerp target for uAlpha
 
   const onEnter = useCallback(() => setHovered(true),  []);
   const onLeave = useCallback(() => setHovered(false), []);
@@ -23,21 +60,50 @@ const Landmark = ({ lm, isDark }) => {
     return () => { document.body.style.cursor = ''; };
   }, [hovered]);
 
+  // Build the sonar material once per landmark
+  const sonarMat = useMemo(() => {
+    const color = new THREE.Color(lm.color);
+    return new THREE.ShaderMaterial({
+      vertexShader:   sonarVert,
+      fragmentShader: sonarFrag,
+      uniforms: {
+        uTime:  { value: 0 },
+        uColor: { value: color },
+        uAlpha: { value: 0 },
+      },
+      transparent: true,
+      depthWrite:  false,
+      side:        THREE.DoubleSide,
+    });
+  }, [lm.color]);
+
   useFrame(({ clock }) => {
-    if (!glowRef.current) return;
-    const t = clock.getElapsedTime();
-    const target = hovered ? 0.18 + Math.sin(t * 3.5) * 0.10 : 0;
-    glowRef.current.material.opacity += (target - glowRef.current.material.opacity) * 0.12;
-    const s = hovered ? 1 + Math.sin(t * 2) * 0.06 : 0.8;
-    glowRef.current.scale.setScalar(s);
+    sonarMat.uniforms.uTime.value = clock.getElapsedTime();
+
+    // Smoothly show/hide the disc
+    const targetAlpha = hovered ? 0.85 : 0;
+    alphaRef.current += (targetAlpha - alphaRef.current) * 0.10;
+    sonarMat.uniforms.uAlpha.value = alphaRef.current;
+
+    // Scale the disc slightly on hover for a "landing pad expanding" feel
+    if (discRef.current) {
+      const targetScale = hovered ? 1.08 : 1.0;
+      discRef.current.scale.x += (targetScale - discRef.current.scale.x) * 0.10;
+      discRef.current.scale.y += (targetScale - discRef.current.scale.y) * 0.10;
+    }
   });
 
   return (
     <group>
-      {/* Ground-glow disc */}
-      <mesh ref={glowRef} position={[lm.hitPos[0], 0.05, lm.hitPos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[2.8, 32]} />
-        <meshBasicMaterial color={lm.color} transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
+      {/* Ground sonar disc */}
+      <mesh
+        ref={discRef}
+        position={[lm.hitPos[0], 0.06, lm.hitPos[2]]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        renderOrder={1}
+      >
+        <planeGeometry args={[5.6, 5.6, 1, 1]} />
+        <primitive object={sonarMat} attach="material" />
       </mesh>
 
       {/* Invisible 3D hit volume */}
@@ -82,10 +148,8 @@ const Landmark = ({ lm, isDark }) => {
             position: 'relative',
           }}
         >
-          {/* Icon */}
           <div style={{ fontSize: '20px', lineHeight: 1, marginBottom: '5px' }}>{lm.icon}</div>
 
-          {/* Label */}
           <div style={{
             color: hovered ? lm.color : (isDark ? '#f0f0ff' : '#1a1a2e'),
             fontWeight: 700, fontSize: '12px', letterSpacing: '0.09em',
@@ -94,7 +158,6 @@ const Landmark = ({ lm, isDark }) => {
             {lm.label}
           </div>
 
-          {/* Sub */}
           <div style={{
             color: isDark ? 'rgba(200,190,255,0.45)' : 'rgba(0,0,0,0.38)',
             fontSize: '10px', letterSpacing: '0.05em', marginTop: '3px',
@@ -108,14 +171,12 @@ const Landmark = ({ lm, isDark }) => {
             overflow: 'hidden',
             transition: 'max-height 0.22s ease',
           }}>
-            {/* Divider */}
             <div style={{
               margin: '7px 0 6px',
               height: '1px',
               background: `linear-gradient(to right, transparent, ${lm.color}55, transparent)`,
             }} />
 
-            {/* Desc line */}
             {lm.desc && (
               <div style={{
                 color: isDark ? 'rgba(220,210,255,0.6)' : 'rgba(0,0,0,0.5)',
@@ -126,19 +187,14 @@ const Landmark = ({ lm, isDark }) => {
               </div>
             )}
 
-            {/* Tag chips */}
             {lm.tags && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {lm.tags.map((tag) => (
                   <span key={tag} style={{
-                    fontSize: '8px',
-                    fontFamily: 'monospace',
-                    letterSpacing: '0.06em',
-                    padding: '2px 6px',
-                    borderRadius: '999px',
+                    fontSize: '8px', fontFamily: 'monospace', letterSpacing: '0.06em',
+                    padding: '2px 6px', borderRadius: '999px',
                     border: `1px solid ${lm.color}66`,
-                    color: lm.color,
-                    background: `${lm.color}14`,
+                    color: lm.color, background: `${lm.color}14`,
                   }}>
                     {tag}
                   </span>
@@ -147,7 +203,7 @@ const Landmark = ({ lm, isDark }) => {
             )}
           </div>
 
-          {/* ▶ ENTER */}
+          {/* ▶ ENTER bar */}
           <div style={{
             marginTop: '6px',
             height: hovered ? '16px' : '0px',
@@ -162,7 +218,7 @@ const Landmark = ({ lm, isDark }) => {
             </div>
           </div>
 
-          {/* Post line */}
+          {/* Connecting post */}
           <div style={{
             position: 'absolute', bottom: '-18px', left: '50%', transform: 'translateX(-50%)',
             width: '2px', height: '18px',

@@ -8,10 +8,10 @@ export const GameCard = ({ title, genre, description, link, partnerName, partner
   <TiltWrapper className="w-full h-full">
     <div
       onClick={onClick}
-      className={`group relative border rounded-xl p-6 transition-all duration-300 cursor-pointer h-full ${
+      className={`group relative border rounded-xl p-6 transition-all duration-300 cursor-pointer h-full backdrop-blur-md ${
         isDark
-          ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]'
-          : 'bg-white border-purple-100 shadow-sm hover:border-[#5500CC]/40 hover:shadow-lg'
+          ? 'bg-purple-950/40 border-purple-500/20 hover:bg-purple-950/55 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]'
+          : 'bg-white/70 border-purple-200/60 shadow-sm hover:bg-white/85 hover:border-[#5500CC]/40 hover:shadow-lg'
       }`}
     >
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#5500EE] via-fuchsia-400 to-orange-500 rounded-t opacity-0 group-hover:opacity-100 transition-opacity" />

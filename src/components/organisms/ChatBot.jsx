@@ -80,48 +80,53 @@ const ChatBot = () => {
   return (
     <>
       {/* ── Engagement bubble ──────────────────────────────────────────────── */}
-      {showWelcome && !isOpen && (
+      {showWelcome && !isOpen && window.innerWidth >= 768 && (
         <div
           className="fixed bottom-36 right-6 z-50 animate-[bounce_3s_infinite] cursor-pointer"
           onClick={handleBubbleClick}
         >
-          <div className={`relative backdrop-blur-xl border px-5 pt-4 pb-5 rounded-2xl rounded-br-none shadow-lg max-w-[240px] transition-all ${
+          <div className={`relative backdrop-blur-xl border px-5 pt-4 pb-4 rounded-2xl rounded-br-none shadow-lg max-w-[240px] transition-all ${
             isDark ? 'bg-gray-900/95 border-yellow-500 text-white' : 'bg-white/95 border-yellow-500 text-gray-900'
           }`}>
             <p className="font-bold text-sm flex items-center gap-2 mb-2">
               <span className="text-xl">🦁</span> Leo says:
             </p>
-            <p key={`text-${factIndex}`} className="text-xs font-medium mb-2 animate-[fadeIn_0.4s_ease-out]">
+            <p key={`text-${factIndex}`} className="text-xs font-medium mb-3 animate-[fadeIn_0.4s_ease-out]">
               {activeFact?.text}
             </p>
             {activeFact?.route && (
-              <p className={`text-[10px] font-bold flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+              <p className={`text-[10px] font-bold flex items-center gap-1 mb-3 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
                 <ArrowRight size={10} /> {activeFact.routeLabel}
               </p>
             )}
-            <button
-              onClick={(e) => { e.stopPropagation(); clearInterval(cycleRef.current); setShowWelcome(false); }}
-              className="absolute -top-2 -right-2 bg-gray-800 border border-gray-600 rounded-full p-1 text-gray-400 hover:text-white hover:bg-red-500"
-            >
-              <X size={12} />
-            </button>
-            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-yellow-900/30 rounded-b-2xl overflow-hidden" style={{ borderRadius: '0 0 1rem 1rem' }}>
+
+            {/* Pagination dots — inside the card so they stay within bounds */}
+            <div className="flex justify-center gap-1.5 mb-3">
+              {CHATBOT_PERSONA.facts.map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === factIndex ? 'w-4 h-1.5 bg-yellow-500' : 'w-1.5 h-1.5 bg-yellow-500/30'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Progress bar — in normal flow, clips cleanly inside the card */}
+            <div className="w-full h-[3px] rounded-full bg-yellow-900/30 overflow-hidden">
               <div
                 key={`bar-${factIndex}`}
                 className="h-full bg-yellow-500 origin-left"
                 style={{ animation: `leoBubbleShrink ${CYCLE_MS}ms linear forwards` }}
               />
             </div>
-          </div>
-          <div className="flex justify-center gap-1.5 mt-2">
-            {CHATBOT_PERSONA.facts.map((_, i) => (
-              <div
-                key={i}
-                className={`rounded-full transition-all duration-300 ${
-                  i === factIndex ? 'w-4 h-1.5 bg-yellow-500' : 'w-1.5 h-1.5 bg-yellow-500/30'
-                }`}
-              />
-            ))}
+
+            <button
+              onClick={(e) => { e.stopPropagation(); clearInterval(cycleRef.current); setShowWelcome(false); }}
+              className="absolute -top-2 -right-2 bg-gray-800 border border-gray-600 rounded-full p-1 text-gray-400 hover:text-white hover:bg-red-500"
+            >
+              <X size={12} />
+            </button>
           </div>
         </div>
       )}
@@ -187,7 +192,17 @@ const ChatBot = () => {
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <span className="p-2 text-xs italic opacity-50">Leo is thinking…</span>
+                <div className={`flex items-center gap-1 px-4 py-3 rounded-2xl rounded-bl-none border ${
+                  isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+                }`}>
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className={`block w-2 h-2 rounded-full ${isDark ? 'bg-yellow-400' : 'bg-yellow-500'}`}
+                      style={{ animation: `leoTypingDot 1.1s ease-in-out ${i * 0.18}s infinite` }}
+                    />
+                  ))}
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />

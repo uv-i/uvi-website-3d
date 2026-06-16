@@ -1,22 +1,11 @@
 import { useRef, Suspense } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import OrbitLight      from './OrbitLight';
 import DustMotes       from './DustMotes';
 import CelestialBodies from './CelestialBodies';
 import VikingIsland    from './VikingIsland';
 import LeoOrb          from './LeoOrb';
-
-// ─── Animation pulse ─────────────────────────────────────────────────────────
-// frameloop="demand" only renders on explicit invalidate(). This component
-// calls invalidate() every frame so continuous animations (fire, dust, bob,
-// celestial bodies) keep running. Browser RAF throttling still applies when
-// the tab is backgrounded.
-const AnimationPulse = () => {
-  const { invalidate } = useThree();
-  useFrame(() => invalidate());
-  return null;
-};
 
 // ─── Ping-pong auto-rotate ────────────────────────────────────────────────────
 // Drives OrbitControls left↔right instead of drifting to one azimuth limit.
@@ -86,7 +75,6 @@ const SceneContent = ({ isDark }) => {
       <pointLight position={[-5, 8, 0]} intensity={isDark ? 1.2 : 0.35} color="#8855FF" distance={30} />
       <pointLight position={[6,  3, 6]} intensity={isDark ? 0.7 : 0.25} color="#FF8C00" distance={22} />
 
-      <AnimationPulse />
       <OrbitLight      isDark={isDark} />
       <DustMotes       isDark={isDark} />
       <CelestialBodies isDark={isDark} />

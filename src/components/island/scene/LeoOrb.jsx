@@ -1,19 +1,47 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Leo lives just above and beside the forge
-const ORB_POS = [-8, 0.75, 12];
+const ORB_POS   = [-8, 0.75, 12];
 const ORB_COLOR = '#FFBB33';
+const ORB_COLOR_VEC = new THREE.Color(ORB_COLOR);
 
-/**
- * LeoOrb — a glowing animated sphere near the forge.
- * Clicking dispatches the 'leo:open' DOM event which ChatBot.jsx listens for.
- */
+// ── Fresnel ShaderMaterial ────────────────────────────────────────────────────
+// Renders the glowing shell around the orb. The fresnel term makes edges glow
+// bright and the center transparent — exactly like a glass energy ball.
+const fresnelVert = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+
+  void main() {
+    vNormal  = normalize(normalMatrix * normal);
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    vViewDir   = normalize(-mvPos.xyz);
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+
+const fresnelFrag = /* glsl */ `
+  uniform vec3  uColor;
+  uniform float uIntensity;
+  varying vec3  vNormal;
+  varying vec3  vViewDir;
+
+  void main() {
+    float fresnel  = pow(1.0 - abs(dot(vNormal, vViewDir)), 2.8);
+    // Add a soft core glow so it isn't purely edge-lit
+    float corGlow  = pow(abs(dot(vNormal, vViewDir)), 4.0) * 0.25;
+    float alpha    = clamp((fresnel + corGlow) * uIntensity, 0.0, 1.0);
+    gl_FragColor   = vec4(uColor, alpha);
+  }
+`;
+
+// ── Component ─────────────────────────────────────────────────────────────────
 const LeoOrb = ({ isDark }) => {
-  const orbRef   = useRef();
-  const glowRef  = useRef();
+  const orbRef     = useRef();
+  const shellRef   = useRef();
+  const lightRef   = useRef();
   const [hovered, setHovered] = useState(false);
 
   const onEnter = useCallback(() => setHovered(true),  []);
@@ -24,25 +52,49 @@ const LeoOrb = ({ isDark }) => {
     return () => { document.body.style.cursor = ''; };
   }, [hovered]);
 
+  // Build the fresnel material once
+  const fresnelMat = useMemo(() => new THREE.ShaderMaterial({
+    vertexShader:   fresnelVert,
+    fragmentShader: fresnelFrag,
+    uniforms: {
+      uColor:     { value: ORB_COLOR_VEC.clone() },
+      uIntensity: { value: 1.0 },
+    },
+    transparent:  true,
+    depthWrite:   false,
+    side:         THREE.FrontSide,
+    blending:     THREE.AdditiveBlending,
+  }), []);
+
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
 
-    // Bob up and down
+    // Bob + spin
     if (orbRef.current) {
       orbRef.current.position.y = ORB_POS[1] + Math.sin(t * 1.4) * 0.22;
-      // Gentle spin
       orbRef.current.rotation.y = t * 0.6;
     }
 
-    // Pulse glow halo
-    if (glowRef.current) {
-      const pulse = 0.55 + Math.sin(t * 2.8) * 0.20;
-      const targetOpacity = hovered ? pulse + 0.15 : pulse * 0.6;
-      glowRef.current.material.opacity += (targetOpacity - glowRef.current.material.opacity) * 0.08;
-      const targetScale = hovered ? 1.3 : 1.0;
-      glowRef.current.scale.x += (targetScale - glowRef.current.scale.x) * 0.08;
-      glowRef.current.scale.y += (targetScale - glowRef.current.scale.y) * 0.08;
-      glowRef.current.scale.z += (targetScale - glowRef.current.scale.z) * 0.08;
+    // Fresnel shell — follows orb Y, pulses intensity
+    if (shellRef.current) {
+      shellRef.current.position.y = ORB_POS[1] + Math.sin(t * 1.4) * 0.22;
+      const pulse = 0.7 + Math.sin(t * 2.8) * 0.18;
+      const targetIntensity = hovered ? pulse * 1.6 : pulse;
+      fresnelMat.uniforms.uIntensity.value +=
+        (targetIntensity - fresnelMat.uniforms.uIntensity.value) * 0.08;
+
+      const targetScale = hovered ? 1.35 : 1.0;
+      shellRef.current.scale.x += (targetScale - shellRef.current.scale.x) * 0.08;
+      shellRef.current.scale.y += (targetScale - shellRef.current.scale.y) * 0.08;
+      shellRef.current.scale.z += (targetScale - shellRef.current.scale.z) * 0.08;
+    }
+
+    // Point light breathes with fresnel
+    if (lightRef.current) {
+      const targetIntensity = hovered
+        ? 1.8 + Math.sin(t * 3.1) * 0.3
+        : 0.9 + Math.sin(t * 2.4) * 0.15;
+      lightRef.current.intensity += (targetIntensity - lightRef.current.intensity) * 0.07;
     }
   });
 
@@ -52,43 +104,49 @@ const LeoOrb = ({ isDark }) => {
   };
 
   return (
-    <group position={ORB_POS}>
-      {/* Glow halo — flat circle, always faces camera via billboard effect */}
-      <mesh ref={glowRef} renderOrder={1}>
-        <circleGeometry args={[0.55, 32]} />
-        <meshBasicMaterial
-          color={ORB_COLOR}
-          transparent
-          opacity={0.35}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
-        />
+    <group>
+      {/* Fresnel shell — slightly larger than orb, shares Y animation */}
+      <mesh
+        ref={shellRef}
+        position={[ORB_POS[0], ORB_POS[1], ORB_POS[2]]}
+        renderOrder={2}
+      >
+        <sphereGeometry args={[0.50, 32, 32]} />
+        <primitive object={fresnelMat} attach="material" />
       </mesh>
 
-      {/* The orb sphere */}
+      {/* The core orb sphere */}
       <mesh
         ref={orbRef}
+        position={[ORB_POS[0], ORB_POS[1], ORB_POS[2]]}
         onPointerOver={(e) => { e.stopPropagation(); onEnter(); }}
         onPointerOut={onLeave}
         onClick={handleClick}
+        renderOrder={3}
       >
-        <sphereGeometry args={[0.28, 16, 16]} />
+        <sphereGeometry args={[0.28, 24, 24]} />
         <meshStandardMaterial
           color={ORB_COLOR}
           emissive={ORB_COLOR}
-          emissiveIntensity={hovered ? 2.5 : 1.4}
-          roughness={0.1}
-          metalness={0.2}
+          emissiveIntensity={hovered ? 3.0 : 1.6}
+          roughness={0.05}
+          metalness={0.15}
         />
       </mesh>
 
-      {/* Point light so the orb illuminates surroundings */}
-      <pointLight color={ORB_COLOR} intensity={hovered ? 1.8 : 0.9} distance={6} decay={2} />
+      {/* Point light illuminates surroundings */}
+      <pointLight
+        ref={lightRef}
+        position={[ORB_POS[0], ORB_POS[1] + 0.3, ORB_POS[2]]}
+        color={ORB_COLOR}
+        intensity={0.9}
+        distance={8}
+        decay={2}
+      />
 
       {/* HTML tooltip */}
       <Html
-        position={[0, 0.65, 0]}
+        position={[ORB_POS[0], ORB_POS[1] + 0.85, ORB_POS[2]]}
         center
         zIndexRange={[10, 0]}
         style={{ pointerEvents: 'none', userSelect: 'none' }}

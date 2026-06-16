@@ -17,10 +17,10 @@ const Tag = ({ label, isDark }) => (
 // ── Repo card ──────────────────────────────────────────────────────────────────
 const RepoCard = ({ repo, isDark }) => (
   <TiltWrapper className="w-full h-full">
-    <article className={`group relative flex flex-col border rounded-xl overflow-hidden h-full ${
+    <article className={`group relative flex flex-col border rounded-xl overflow-hidden h-full backdrop-blur-md ${
       isDark
-        ? 'bg-[#0d0b18] border-purple-900/40 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]'
-        : 'bg-white border-purple-100 hover:border-[#5500CC]/40 hover:shadow-[0_0_16px_rgba(85,0,204,0.1)] shadow-sm'
+        ? 'bg-purple-950/40 border-purple-500/20 hover:bg-purple-950/55 hover:border-purple-500/60 hover:shadow-[0_0_24px_rgba(85,0,238,0.15)]'
+        : 'bg-white/70 border-purple-200/60 hover:bg-white/85 hover:border-[#5500CC]/40 hover:shadow-[0_0_16px_rgba(85,0,204,0.1)] shadow-sm'
     }`}>
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#5500EE] via-fuchsia-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -103,7 +103,7 @@ const DevLabPage = () => {
   if (loading) return (
     <div className="pt-24 pb-20 px-4 max-w-6xl mx-auto min-h-screen flex items-center justify-center">
       <div className={`text-sm font-mono ${isDark ? 'text-purple-400' : 'text-[#5500CC]'}`}>
-        Loading packages…
+        Warming up the compiler…
       </div>
     </div>
   );

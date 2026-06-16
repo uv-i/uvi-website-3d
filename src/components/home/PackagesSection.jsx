@@ -6,10 +6,10 @@ import { fadeUp } from './fadeUp';
 
 const PackageCard = ({ pkg, isDark }) => (
   <TiltWrapper className="w-full h-full">
-    <div className={`group relative flex flex-col border rounded-2xl overflow-hidden h-full transition-all duration-300 ${
+    <div className={`group relative flex flex-col border rounded-2xl overflow-hidden h-full transition-all duration-300 backdrop-blur-md ${
       isDark
-        ? 'bg-[#0d0b18] border-purple-900/40 hover:border-orange-500/40 hover:shadow-[0_0_28px_rgba(255,140,0,0.10)]'
-        : 'bg-white border-purple-100 shadow-sm hover:border-orange-300 hover:shadow-md'
+        ? 'bg-purple-950/40 border-purple-500/20 hover:bg-purple-950/55 hover:border-orange-500/40 hover:shadow-[0_0_28px_rgba(255,140,0,0.10)]'
+        : 'bg-white/70 border-purple-200/60 shadow-sm hover:bg-white/85 hover:border-orange-300 hover:shadow-md'
     }`}>
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 via-fuchsia-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
 
